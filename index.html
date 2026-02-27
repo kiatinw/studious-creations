@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  --ink: #1a1814;
+  --paper: #f5f0e8;
+  --cream: #ede7d6;
+  --accent: #c84b2f;
+  --border: rgba(26,24,20,0.15);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--paper);
+  font-family: 'DM Mono', monospace;
+  color: var(--ink);
+  padding: 3rem 2rem;
+}
+
+h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 4rem;
+  margin-bottom: 0.5rem;
+}
+
+.tagline {
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  margin-bottom: 3rem;
+  color: #777;
+}
+
+.grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.card {
+  background: var(--cream);
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  border-color: var(--accent);
+  transform: translateY(-3px);
+}
+
+.card h2 {
+  font-family: 'DM Serif Display', serif;
+  margin-bottom: 0.5rem;
+}
+
+.card p {
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.card a {
+  text-decoration: none;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.5rem 1rem;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.card a:hover {
+  background: var(--accent);
+}
+
+footer {
+  margin-top: 4rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #888;
+}
+
+</style>
+</head>
+<body>
+
+<h1>Rank<em>Forge</em></h1>
+<div class="tagline">Tools · Experiments · Projects</div>
+
+<div class="grid">
+
+  <div class="card">
+    <h2>RankForge</h2>
+    <p>Upload Sentral PDFs and generate a ranking of all students in the cohort. Can be based on Assessment Marks using Z-Scores or Ranks.</p>
+    <a href="https://kiatinw.github.io/rankmachine/">Launch</a>
+  </div>
+
+  <div class="card">
+    <h2>📚 NESA Course Mapping Tool</h2>
+    <p>Puts spreadsheets from Sentral and NESA in a blender to create a spreadsheet for importing into Schools Online with courses.</p>
+    <a href="https://kiatinw.github.io/NESA_Course_Mapping/">Launch</a>
+  </div>
+
+  <div class="card">
+    <h2>🎮 Extension 1 Emoji Game</h2>
+    <p>A silly game for use in Year 12 Extension 1. Guess the term from the syllabus by playing charades or using emojis as clues.</p>
+    <a href="https://kiatinw.github.io/Ext1emojigame/">Launch</a>
+  </div>
+
+</div>
+
+<footer>
+© 2026 K Williamson
+</footer>
+
+</body>
+</html>
