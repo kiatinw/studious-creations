@@ -3,16 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Your Tools</title>
+<title>K Williamson – Creations</title>
+
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
 <style>
 
 :root {
-  --ink: #1a1814;
-  --paper: #f5f0e8;
-  --cream: #ede7d6;
+  --bg: #f8f9fb;
+  --text: #111111;
+  --muted: #7a7a7a;
+  --border: rgba(0,0,0,0.06);
   --accent: #c84b2f;
-  --border: rgba(26,24,20,0.15);
 }
 
 * {
@@ -22,106 +24,141 @@
 }
 
 body {
-  background: var(--paper);
+  background: var(--bg);
+  color: var(--text);
   font-family: 'DM Mono', monospace;
-  color: var(--ink);
-  padding: 3rem 2rem;
+  padding: 4rem 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
 h1 {
   font-family: 'DM Serif Display', serif;
-  font-size: 4rem;
-  margin-bottom: 0.5rem;
+  font-size: 3.5rem;
+  font-weight: 400;
+  margin-bottom: 0.6rem;
 }
 
 .tagline {
-  letter-spacing: 0.2em;
+  letter-spacing: 0.25em;
   text-transform: uppercase;
-  font-size: 0.8rem;
-  margin-bottom: 3rem;
-  color: #777;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 4rem;
 }
+
+/* ===== Section Header ===== */
+
+.section-header {
+  margin-bottom: 3rem;
+}
+
+.section-header h2 {
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.8rem;
+}
+
+.section-header p {
+  font-family: 'DM Serif Display', serif;
+  font-size: 2rem;
+  font-weight: 400;
+}
+
+/* ===== Grid ===== */
 
 .grid {
   display: grid;
-  gap: 1.5rem;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
 }
 
+/* ===== Cards ===== */
+
 .card {
-  background: var(--cream);
+  text-decoration: none;
+  color: inherit;
+  padding: 2rem;
+  border-radius: 14px;
+  background: #ffffff;
   border: 1px solid var(--border);
-  padding: 1.5rem;
-  border-radius: 6px;
   transition: all 0.2s ease;
 }
 
 .card:hover {
-  border-color: var(--accent);
-  transform: translateY(-3px);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 35px rgba(0,0,0,0.06);
 }
 
-.card h2 {
+.card-title {
   font-family: 'DM Serif Display', serif;
-  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+  margin-bottom: 0.9rem;
 }
 
-.card p {
-  font-size: 0.8rem;
-  margin-bottom: 1rem;
-  line-height: 1.5;
+.card-desc {
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 1.8rem;
 }
 
-.card a {
-  text-decoration: none;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 0.5rem 1rem;
-  background: var(--ink);
-  color: var(--paper);
-  border-radius: 3px;
-  display: inline-block;
-}
-
-.card a:hover {
-  background: var(--accent);
-}
-
-footer {
-  margin-top: 4rem;
+.card-link {
   font-size: 0.7rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: #888;
+  color: var(--accent);
+}
+
+/* ===== Footer ===== */
+
+footer {
+  margin-top: 5rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 </style>
 </head>
 <body>
 
-<h1>Rank<em>Forge</em></h1>
+<h1>RankForge</h1>
 <div class="tagline">Tools · Experiments · Projects</div>
+
+<div class="section-header">
+  <h2>Creations</h2>
+  <p>Tools, experiments and shipped projects.</p>
+</div>
 
 <div class="grid">
 
-  <div class="card">
-    <h2>RankForge</h2>
-    <p>Upload Sentral PDFs and generate a ranking of all students in the cohort. Can be based on Assessment Marks using Z-Scores or Ranks.</p>
-    <a href="https://kiatinw.github.io/rankmachine/">Launch</a>
-  </div>
+  <a class="card" href="https://kiatinw.github.io/rankmachine/">
+    <div class="card-title">RankForge</div>
+    <div class="card-desc">
+      Upload Sentral PDFs and generate a ranking of all students in the cohort using Z-scores or rank-based systems.
+    </div>
+    <div class="card-link">Open →</div>
+  </a>
 
-  <div class="card">
-    <h2>📚 NESA Course Mapping Tool</h2>
-    <p>Puts spreadsheets from Sentral and NESA in a blender to create a spreadsheet for importing into Schools Online with courses.</p>
-    <a href="https://kiatinw.github.io/NESA_Course_Mapping/">Launch</a>
-  </div>
+  <a class="card" href="https://kiatinw.github.io/NESA_Course_Mapping/">
+    <div class="card-title">NESA Course Mapping Tool</div>
+    <div class="card-desc">
+      Converts Sentral and NESA spreadsheets into a structured format ready for Schools Online course imports.
+    </div>
+    <div class="card-link">Open →</div>
+  </a>
 
-  <div class="card">
-    <h2>🎮 Extension 1 Emoji Game</h2>
-    <p>A silly game for use in Year 12 Extension 1. Guess the term from the syllabus by playing charades or using emojis as clues.</p>
-    <a href="https://kiatinw.github.io/Ext1emojigame/">Launch</a>
-  </div>
+  <a class="card" href="https://kiatinw.github.io/Ext1emojigame/">
+    <div class="card-title">Extension 1 Emoji Game</div>
+    <div class="card-desc">
+      A Year 12 Extension 1 revision game using emoji clues and charades-style prompts for syllabus terms.
+    </div>
+    <div class="card-link">Open →</div>
+  </a>
 
 </div>
 
