@@ -239,6 +239,27 @@
   /* Setup header */
   .header { text-align: center; }
 
+  .category-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .cat-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    padding: 10px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.2s, background 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .cat-btn:hover { border-color: var(--muted); }
+  .cat-btn.selected { border-color: var(--red); background: rgba(232,49,42,0.12); color: var(--red); }
+
   .small-note { font-size: 0.65rem; color: var(--muted); text-align: center; }
 </style>
 </head>
@@ -249,16 +270,6 @@
   <div class="header">
     <h1>IMPOSTOR</h1>
     <p class="tagline">Who doesn't belong?</p>
-  </div>
-
-  <div>
-    <label>Category / Topic Name</label>
-    <input type="text" id="category-input" placeholder="e.g. Algebra Terms" value="">
-  </div>
-
-  <div>
-    <label>Word List (one per line, or comma-separated)</label>
-    <textarea id="words-input" placeholder="e.g.&#10;gradient&#10;intercept&#10;parabola&#10;vertex&#10;quadratic&#10;linear&#10;coefficient&#10;variable"></textarea>
   </div>
 
   <div>
@@ -346,30 +357,33 @@
 </div>
 
 <script>
-  let numPlayers = 4;
+  const CATEGORIES = {
+    "Algebra": ["variable", "coefficient", "expression", "equation", "inequality", "factor", "expand", "simplify", "quadratic", "polynomial", "root", "substitution", "formula", "identity", "simultaneous"],
+    "Geometry": ["angle", "bisector", "chord", "arc", "tangent", "sector", "segment", "polygon", "congruent", "similar", "locus", "perpendicular", "parallel", "hypotenuse", "circumference"],
+    "Trigonometry": ["sine", "cosine", "tangent", "radian", "amplitude", "period", "identity", "SOHCAHTOA", "inverse", "bearing", "adjacent", "opposite", "hypotenuse", "cotangent", "secant"],
+    "Statistics & Probability": ["mean", "median", "mode", "range", "variance", "standard deviation", "histogram", "frequency", "probability", "sample", "hypothesis", "correlation", "outlier", "quartile", "cumulative"],
+    "Calculus": ["derivative", "integral", "limit", "gradient", "chain rule", "product rule", "stationary point", "inflection", "differentiation", "integration", "area under curve", "turning point", "rate of change", "antiderivative", "tangent"],
+    "Number Theory": ["prime", "factor", "multiple", "divisor", "HCF", "LCM", "modulo", "integer", "rational", "irrational", "surds", "index", "logarithm", "Fibonacci", "Euclidean"],
+    "Vectors": ["magnitude", "direction", "scalar", "dot product", "cross product", "unit vector", "position vector", "column vector", "resultant", "component", "parallel", "perpendicular", "displacement", "basis", "linear combination"],
+    "Functions & Graphs": ["domain", "range", "inverse", "composite", "asymptote", "intercept", "gradient", "translation", "reflection", "stretch", "parabola", "hyperbola", "exponential", "logarithm", "mapping"],
+    "Sequences & Series": ["arithmetic", "geometric", "common difference", "common ratio", "nth term", "sum to infinity", "convergent", "divergent", "recurrence", "Fibonacci", "sigma notation", "partial sum", "limit", "first term", "progression"]
+  };
+
   let gameState = {};
   let categoryVisible = false;
 
-  function parseWords(raw) {
-    return raw.split(/[\n,]+/).map(w => w.trim()).filter(Boolean);
-  }
-
   function startGame() {
-    const category = document.getElementById('category-input').value.trim();
-    const words = parseWords(document.getElementById('words-input').value);
-    numPlayers = parseInt(document.getElementById('player-count-input').value);
-
-    if (!category) { alert('Please enter a category name.'); return; }
-    if (words.length < 2) { alert('Please enter at least 2 words.'); return; }
+    const numPlayers = parseInt(document.getElementById('player-count-input').value);
     if (isNaN(numPlayers) || numPlayers < 3) { alert('Please enter at least 3 players.'); return; }
 
+    const categoryNames = Object.keys(CATEGORIES);
+    const selectedCategory = categoryNames[Math.floor(Math.random() * categoryNames.length)];
+    const words = CATEGORIES[selectedCategory];
     const word = words[Math.floor(Math.random() * words.length)];
     const impostorIndex = Math.floor(Math.random() * numPlayers);
-
-    // Shuffle order 1..numPlayers
     const order = Array.from({length: numPlayers}, (_, i) => i).sort(() => Math.random() - 0.5);
 
-    gameState = { category, word, impostorIndex, order, numPlayers, currentStep: 0, words };
+    gameState = { category: selectedCategory, word, impostorIndex, order, numPlayers, currentStep: 0, words };
 
     showScreen('screen-reveal');
     setupReveal();
@@ -386,7 +400,7 @@
 
   function showStep(step) {
     gameState.currentStep = step;
-    const playerNum = gameState.order[step] + 1; // 1-based
+    const playerNum = gameState.order[step] + 1;
 
     document.getElementById('current-player-name').textContent = `PLAYER ${playerNum}`;
     document.getElementById('player-counter').textContent = `${step+1} / ${gameState.numPlayers}`;
@@ -472,12 +486,10 @@
 
   function newRound() {
     const words = gameState.words;
-    const category = gameState.category;
     const numPlayers = gameState.numPlayers;
     const word = words[Math.floor(Math.random() * words.length)];
     const impostorIndex = Math.floor(Math.random() * numPlayers);
     const order = Array.from({length: numPlayers}, (_, i) => i).sort(() => Math.random() - 0.5);
-
     gameState = { ...gameState, word, impostorIndex, order, currentStep: 0 };
     showScreen('screen-reveal');
     setupReveal();
