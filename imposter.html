@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Impostor</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d0d;
+    --card: #161616;
+    --border: #2a2a2a;
+    --red: #e8312a;
+    --green: #2ae87a;
+    --yellow: #f5c518;
+    --text: #f0ede6;
+    --muted: #666;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3rem, 10vw, 6rem);
+    letter-spacing: 0.05em;
+    color: var(--red);
+    text-shadow: 4px 4px 0 #5a0a07;
+    line-height: 1;
+  }
+
+  .tagline {
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2rem;
+  }
+
+  .screen { width: 100%; max-width: 480px; display: none; }
+  .screen.active { display: flex; flex-direction: column; gap: 16px; }
+
+  label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  textarea, input[type="text"] {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    padding: 12px;
+    border-radius: 4px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  textarea:focus, input[type="text"]:focus { border-color: var(--red); }
+  textarea { min-height: 120px; }
+
+  .btn {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 0.1em;
+    padding: 14px 28px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+    width: 100%;
+  }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-red { background: var(--red); color: #fff; }
+  .btn-dark { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+  .btn-green { background: var(--green); color: #0d0d0d; }
+  .btn-yellow { background: var(--yellow); color: #0d0d0d; }
+
+  /* Players list */
+  .players-list { display: flex; flex-direction: column; gap: 8px; }
+  .player-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--card); border: 1px solid var(--border);
+    padding: 10px 14px; border-radius: 4px;
+    font-size: 0.85rem;
+  }
+  .player-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    color: var(--red);
+    margin-right: 10px;
+  }
+  .player-name { flex: 1; }
+  .remove-btn {
+    background: none; border: none; color: var(--muted);
+    font-size: 1rem; cursor: pointer; padding: 0 4px;
+    transition: color 0.2s;
+  }
+  .remove-btn:hover { color: var(--red); }
+
+  input[type="number"] {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 2rem;
+    padding: 12px;
+    border-radius: 4px;
+    outline: none;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  input[type="number"]:focus { border-color: var(--red); }
+  input[type="number"]::-webkit-inner-spin-button { opacity: 1; }
+
+  /* Role reveal card */
+  .role-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 32px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .role-card.impostor { border-color: var(--red); }
+  .role-card.citizen { border-color: var(--green); }
+
+  .player-turn {
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .player-turn span { color: var(--yellow); }
+
+  .cover-message {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .cover-sub {
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  .role-badge {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3.5rem;
+    line-height: 1;
+    margin: 16px 0 8px;
+  }
+  .role-badge.impostor { color: var(--red); }
+  .role-badge.citizen { color: var(--green); }
+
+  .role-word {
+    font-size: 1.1rem;
+    background: rgba(255,255,255,0.05);
+    padding: 12px 20px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+    margin: 8px 0;
+  }
+
+  .hidden-content { display: none; }
+
+  .progress-dots {
+    display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+  .dot.done { background: var(--green); }
+  .dot.current { background: var(--yellow); }
+
+  .info-row {
+    display: flex; justify-content: space-between;
+    font-size: 0.7rem; color: var(--muted);
+    padding: 6px 0;
+  }
+  .info-row span:last-child { color: var(--text); }
+
+  .results-area {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+  }
+  .results-area h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    margin-bottom: 12px;
+  }
+  .impostor-reveal {
+    font-size: 0.9rem; margin: 8px 0;
+    background: rgba(232,49,42,0.1);
+    border: 1px solid rgba(232,49,42,0.3);
+    border-radius: 4px;
+    padding: 10px;
+  }
+  .category-reveal {
+    font-size: 0.9rem; margin: 8px 0;
+    background: rgba(42,232,122,0.1);
+    border: 1px solid rgba(42,232,122,0.3);
+    border-radius: 4px;
+    padding: 10px;
+  }
+
+  .sep { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+
+  /* Setup header */
+  .header { text-align: center; }
+
+  .small-note { font-size: 0.65rem; color: var(--muted); text-align: center; }
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div class="screen active" id="screen-setup">
+  <div class="header">
+    <h1>IMPOSTOR</h1>
+    <p class="tagline">Who doesn't belong?</p>
+  </div>
+
+  <div>
+    <label>Category / Topic Name</label>
+    <input type="text" id="category-input" placeholder="e.g. Algebra Terms" value="">
+  </div>
+
+  <div>
+    <label>Word List (one per line, or comma-separated)</label>
+    <textarea id="words-input" placeholder="e.g.&#10;gradient&#10;intercept&#10;parabola&#10;vertex&#10;quadratic&#10;linear&#10;coefficient&#10;variable"></textarea>
+  </div>
+
+  <div>
+    <label>Number of Players</label>
+    <input type="number" id="player-count-input" min="3" max="20" value="4">
+  </div>
+  <p class="small-note">Min 3 players. Each player gets a number — one will be the impostor.</p>
+
+  <button class="btn btn-red" onclick="startGame()">START GAME</button>
+</div>
+
+<!-- REVEAL SCREEN -->
+<div class="screen" id="screen-reveal">
+  <div class="progress-dots" id="progress-dots"></div>
+
+  <div class="role-card" id="role-card">
+    <!-- Cover state -->
+    <div id="cover-state">
+      <p class="player-turn">PASS TO <span id="current-player-name">—</span></p>
+      <div class="cover-message">👁 LOOK AWAY</div>
+      <p class="cover-sub">Everyone else look away while this player reads their role</p>
+      <br>
+      <button class="btn btn-yellow" onclick="revealRole()">REVEAL MY ROLE</button>
+    </div>
+    <!-- Role state -->
+    <div id="role-state" class="hidden-content">
+      <p class="player-turn">YOUR ROLE</p>
+      <div class="role-badge" id="role-badge">—</div>
+      <div id="word-area"></div>
+      <br>
+      <p class="cover-sub" style="margin-bottom:12px">Memorise this, then hide it</p>
+      <button class="btn btn-dark" onclick="hideRole()">HIDE & PASS DEVICE</button>
+    </div>
+  </div>
+
+  <div class="info-row">
+    <span>PLAYER</span>
+    <span id="player-counter">1 / ?</span>
+  </div>
+</div>
+
+<!-- PLAY SCREEN -->
+<div class="screen" id="screen-play">
+  <div class="header">
+    <h1>DISCUSS</h1>
+    <p class="tagline">Find the impostor</p>
+  </div>
+
+  <div class="results-area">
+    <div class="info-row">
+      <span>Category</span>
+      <span id="play-category-display" style="color:var(--muted)">Hidden</span>
+    </div>
+    <button class="btn btn-dark" id="toggle-category-btn" onclick="toggleCategory()" style="margin:8px 0;font-size:1rem;padding:10px">👁 SHOW CATEGORY</button>
+    <hr class="sep">
+    <p class="small-note" style="margin-top:8px">Everyone discusses. When ready, vote for who you think is the impostor.</p>
+  </div>
+
+  <button class="btn btn-red" onclick="showResults()">REVEAL RESULTS</button>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div class="screen" id="screen-results">
+  <div class="header">
+    <h1>RESULTS</h1>
+  </div>
+
+  <div class="results-area">
+    <div class="impostor-reveal">
+      <label style="margin-bottom:4px">THE IMPOSTOR WAS</label>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--red)" id="result-impostor">—</div>
+    </div>
+    <div class="category-reveal">
+      <label style="margin-bottom:4px">CATEGORY</label>
+      <div style="font-size:0.95rem" id="result-category">—</div>
+    </div>
+    <div class="category-reveal" style="background:rgba(245,197,24,0.1);border-color:rgba(245,197,24,0.3)">
+      <label style="margin-bottom:4px">THE WORD WAS</label>
+      <div style="font-size:0.95rem" id="result-word">—</div>
+    </div>
+  </div>
+
+  <button class="btn btn-green" onclick="newRound()">NEW ROUND (SAME PLAYERS)</button>
+  <button class="btn btn-dark" onclick="newGame()">CHANGE PLAYERS / WORDS</button>
+</div>
+
+<script>
+  let numPlayers = 4;
+  let gameState = {};
+  let categoryVisible = false;
+
+  function parseWords(raw) {
+    return raw.split(/[\n,]+/).map(w => w.trim()).filter(Boolean);
+  }
+
+  function startGame() {
+    const category = document.getElementById('category-input').value.trim();
+    const words = parseWords(document.getElementById('words-input').value);
+    numPlayers = parseInt(document.getElementById('player-count-input').value);
+
+    if (!category) { alert('Please enter a category name.'); return; }
+    if (words.length < 2) { alert('Please enter at least 2 words.'); return; }
+    if (isNaN(numPlayers) || numPlayers < 3) { alert('Please enter at least 3 players.'); return; }
+
+    const word = words[Math.floor(Math.random() * words.length)];
+    const impostorIndex = Math.floor(Math.random() * numPlayers);
+
+    // Shuffle order 1..numPlayers
+    const order = Array.from({length: numPlayers}, (_, i) => i).sort(() => Math.random() - 0.5);
+
+    gameState = { category, word, impostorIndex, order, numPlayers, currentStep: 0, words };
+
+    showScreen('screen-reveal');
+    setupReveal();
+  }
+
+  // --- REVEAL ---
+  function setupReveal() {
+    const dots = document.getElementById('progress-dots');
+    dots.innerHTML = gameState.order.map((_, i) =>
+      `<div class="dot" id="dot-${i}"></div>`
+    ).join('');
+    showStep(0);
+  }
+
+  function showStep(step) {
+    gameState.currentStep = step;
+    const playerNum = gameState.order[step] + 1; // 1-based
+
+    document.getElementById('current-player-name').textContent = `PLAYER ${playerNum}`;
+    document.getElementById('player-counter').textContent = `${step+1} / ${gameState.numPlayers}`;
+
+    gameState.order.forEach((_, i) => {
+      const dot = document.getElementById(`dot-${i}`);
+      dot.className = 'dot' + (i < step ? ' done' : i === step ? ' current' : '');
+    });
+
+    document.getElementById('cover-state').style.display = '';
+    document.getElementById('role-state').classList.add('hidden-content');
+    document.getElementById('role-card').className = 'role-card';
+  }
+
+  function revealRole() {
+    const step = gameState.currentStep;
+    const playerIdx = gameState.order[step];
+    const isImpostor = playerIdx === gameState.impostorIndex;
+
+    const badge = document.getElementById('role-badge');
+    const wordArea = document.getElementById('word-area');
+    const card = document.getElementById('role-card');
+
+    if (isImpostor) {
+      badge.textContent = 'IMPOSTOR';
+      badge.className = 'role-badge impostor';
+      wordArea.innerHTML = `<p style="color:var(--muted);font-size:0.75rem;margin-top:8px">You don't know the word. Bluff!</p>`;
+      card.className = 'role-card impostor';
+    } else {
+      badge.textContent = 'CITIZEN';
+      badge.className = 'role-badge citizen';
+      wordArea.innerHTML = `
+        <p style="color:var(--muted);font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px">The word is</p>
+        <div class="role-word">${gameState.word}</div>
+        <p style="color:var(--muted);font-size:0.65rem;margin-top:4px">Category: ${gameState.category}</p>
+      `;
+      card.className = 'role-card citizen';
+    }
+
+    document.getElementById('cover-state').style.display = 'none';
+    document.getElementById('role-state').classList.remove('hidden-content');
+  }
+
+  function hideRole() {
+    const step = gameState.currentStep;
+    if (step + 1 < gameState.numPlayers) {
+      showStep(step + 1);
+    } else {
+      showScreen('screen-play');
+      setupPlay();
+    }
+  }
+
+  // --- PLAY ---
+  function setupPlay() {
+    categoryVisible = false;
+    document.getElementById('play-category-display').textContent = 'Hidden';
+    document.getElementById('play-category-display').style.color = 'var(--muted)';
+    document.getElementById('toggle-category-btn').textContent = '👁 SHOW CATEGORY';
+  }
+
+  function toggleCategory() {
+    categoryVisible = !categoryVisible;
+    const display = document.getElementById('play-category-display');
+    const btn = document.getElementById('toggle-category-btn');
+    if (categoryVisible) {
+      display.textContent = gameState.category;
+      display.style.color = 'var(--text)';
+      btn.textContent = '🙈 HIDE CATEGORY';
+    } else {
+      display.textContent = 'Hidden';
+      display.style.color = 'var(--muted)';
+      btn.textContent = '👁 SHOW CATEGORY';
+    }
+  }
+
+  function showResults() {
+    document.getElementById('result-impostor').textContent = `Player ${gameState.impostorIndex + 1}`;
+    document.getElementById('result-category').textContent = gameState.category;
+    document.getElementById('result-word').textContent = gameState.word;
+    showScreen('screen-results');
+  }
+
+  function newRound() {
+    const words = gameState.words;
+    const category = gameState.category;
+    const numPlayers = gameState.numPlayers;
+    const word = words[Math.floor(Math.random() * words.length)];
+    const impostorIndex = Math.floor(Math.random() * numPlayers);
+    const order = Array.from({length: numPlayers}, (_, i) => i).sort(() => Math.random() - 0.5);
+
+    gameState = { ...gameState, word, impostorIndex, order, currentStep: 0 };
+    showScreen('screen-reveal');
+    setupReveal();
+  }
+
+  function newGame() {
+    showScreen('screen-setup');
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+</script>
+</body>
+</html>
