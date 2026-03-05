@@ -6,7 +6,7 @@ A growing collection of tools, experiments and games built with [Claude](https:/
 
 ## Browse the collection
 
-**👉 [kiatinw.github.io/studious-creations](https://kiatinw.github.io/studious-creations)**
+**👉 [kiatinw.github.io/teacher-tools/](https://kiatinw.github.io/teacher-tools/)**
 
 The live site is the source of truth — all projects are listed there.
 
