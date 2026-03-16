@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ext. Maths TikTok Randomiser</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black:  #080808;
+  --deep:   #0e0e0e;
+  --panel:  #141414;
+  --border: rgba(255,255,255,0.08);
+  --ink:    #f0ece4;
+  --dim:    rgba(240,236,228,0.42);
+  --yellow: #f5e642;
+  --pink:   #ff3cac;
+  --cyan:   #3cf5e6;
+  --red:    #ff2d2d;
+  --green:  #39ff6e;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--black);
+  color: var(--ink);
+  font-family: 'DM Mono', monospace;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+/* ── SCANLINE OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 100; pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px, transparent 3px,
+    rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px
+  );
+}
+
+/* ── VIGNETTE ── */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 99; pointer-events: none;
+  background: radial-gradient(ellipse 90% 80% at 50% 50%, transparent 40%, rgba(0,0,0,0.65) 100%);
+}
+
+/* ── NOISE TEXTURE ── */
+.noise {
+  position: fixed; inset: 0; z-index: 98; pointer-events: none; opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+.wrap {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 900px;
+  padding: 2rem 2rem 5rem;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+/* ── LIVE BADGE ── */
+.live-badge {
+  display: flex; align-items: center; gap: 0.5rem;
+  background: var(--red); color: #fff;
+  font-family: 'Teko', sans-serif; font-size: 0.95rem; font-weight: 600;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  padding: 0.25rem 0.85rem 0.2rem;
+  border-radius: 3px;
+  margin-bottom: 1.4rem;
+  animation: livePulse 2s ease-in-out infinite;
+}
+.live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #fff; animation: dotBlink 1.1s ease-in-out infinite;
+}
+@keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:0.82} }
+@keyframes dotBlink  { 0%,100%{opacity:1} 50%{opacity:0.1} }
+
+/* ── HEADING ── */
+.heading {
+  text-align: center; margin-bottom: 0.4rem;
+}
+.heading h1 {
+  font-family: 'Teko', sans-serif;
+  font-size: clamp(3rem, 10vw, 6.5rem);
+  font-weight: 700; line-height: 0.88;
+  letter-spacing: -0.01em;
+  color: var(--yellow);
+  text-shadow: 0 0 60px rgba(245,230,66,0.4), 0 0 12px rgba(245,230,66,0.25);
+}
+.heading h1 span { color: var(--pink); text-shadow: 0 0 50px rgba(255,60,172,0.5); }
+.heading .sub {
+  font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--dim); margin-top: 0.5rem;
+}
+
+/* ── DIVIDER ── */
+.divider {
+  width: 100%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245,230,66,0.35), transparent);
+  margin: 1.6rem 0;
+}
+
+/* ── REEL AREA ── */
+.reels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+  width: 100%;
+}
+@media(max-width:640px){ .reels{grid-template-columns:1fr;} }
+
+.reel-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+.reel-card::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 100% 60% at 50% 0%, rgba(255,255,255,0.025), transparent 70%);
+}
+
+.reel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.7rem 1rem 0;
+}
+.reel-label {
+  font-size: 0.48rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--dim);
+}
+.reel-code {
+  font-family: 'Teko', sans-serif; font-size: 1.4rem; font-weight: 600;
+  letter-spacing: 0.05em; transition: color 0.3s;
+}
+.reel-card.concept .reel-code { color: var(--yellow); }
+.reel-card.style   .reel-code { color: var(--pink);   }
+
+/* The drum window */
+.drum-window {
+  height: 110px;
+  overflow: hidden;
+  position: relative;
+  margin: 0.5rem 0.8rem 0;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: var(--deep);
+}
+
+/* top / bottom fade masks */
+.drum-window::before,
+.drum-window::after {
+  content: ''; position: absolute; left: 0; right: 0; z-index: 2; height: 32px; pointer-events: none;
+}
+.drum-window::before { top: 0;    background: linear-gradient(to bottom, var(--deep), transparent); }
+.drum-window::after  { bottom: 0; background: linear-gradient(to top,    var(--deep), transparent); }
+
+/* centre line */
+.drum-line {
+  position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
+  height: 38px; z-index: 1; pointer-events: none;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.025);
+}
+
+.drum-track {
+  display: flex; flex-direction: column;
+  transition: transform 0.0s; /* controlled by JS */
+  will-change: transform;
+}
+.drum-item {
+  height: 110px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 1rem;
+  font-size: 1.05rem; font-weight: 500; line-height: 1.3;
+  text-align: center;
+  flex-shrink: 0;
+  opacity: 0.3;
+  transition: opacity 0.3s;
+}
+.drum-item.active {
+  opacity: 1;
+}
+.reel-card.concept .drum-item.active { color: var(--ink); }
+.reel-card.style   .drum-item.active { color: var(--cyan); }
+
+.reel-footer {
+  padding: 0.6rem 1rem 0.9rem;
+  display: flex; justify-content: space-between; align-items: flex-end;
+}
+.reel-hint { font-size: 0.48rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim); }
+
+/* ── PROMPT BANNER ── */
+.prompt-banner {
+  width: 100%; margin-top: 1.5rem;
+  background: linear-gradient(135deg, rgba(245,230,66,0.07), rgba(255,60,172,0.07));
+  border: 1px solid rgba(245,230,66,0.2);
+  border-radius: 12px; padding: 1.1rem 1.4rem;
+  display: none; text-align: center;
+  animation: fadeUp 0.4s ease both;
+}
+.prompt-banner.show { display: block; }
+.prompt-label {
+  font-size: 0.5rem; letter-spacing: 0.38em; text-transform: uppercase;
+  color: var(--yellow); opacity: 0.8; margin-bottom: 0.45rem;
+}
+.prompt-text {
+  font-family: 'Teko', sans-serif; font-size: clamp(1.3rem, 4vw, 2rem);
+  font-weight: 600; line-height: 1.2; color: var(--ink); letter-spacing: 0.02em;
+}
+.prompt-text .c-accent { color: var(--yellow); }
+.prompt-text .s-accent { color: var(--pink);   }
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── BUTTONS ── */
+.buttons { display: flex; gap: 0.8rem; margin-top: 1.4rem; flex-wrap: wrap; justify-content: center; }
+
+.btn {
+  font-family: 'Teko', sans-serif; font-size: 1.4rem; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  border: none; border-radius: 8px; cursor: pointer;
+  padding: 0.6rem 1.8rem 0.5rem;
+  transition: transform 0.1s cubic-bezier(0.16,1,0.3,1), box-shadow 0.15s, filter 0.15s;
+  position: relative; overflow: hidden;
+}
+.btn::after {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(255,255,255,0); transition: background 0.1s;
+}
+.btn:hover::after  { background: rgba(255,255,255,0.1); }
+.btn:active { transform: scale(0.96); }
+.btn:hover { transform: translateY(-2px); }
+
+.btn-concept { background: var(--yellow); color: var(--black); box-shadow: 0 4px 24px rgba(245,230,66,0.3); }
+.btn-concept:hover { box-shadow: 0 8px 32px rgba(245,230,66,0.5); }
+.btn-style   { background: var(--pink);   color: #fff;         box-shadow: 0 4px 24px rgba(255,60,172,0.3); }
+.btn-style:hover { box-shadow: 0 8px 32px rgba(255,60,172,0.5); }
+.btn-both    { background: var(--deep); color: var(--ink); border: 1px solid rgba(255,255,255,0.14);
+               box-shadow: 0 4px 24px rgba(0,0,0,0.4); font-size: 1.6rem; padding: 0.6rem 2.4rem 0.5rem; }
+.btn-both:hover { border-color:rgba(255,255,255,0.3); }
+.btn-both.spinning { pointer-events: none; opacity: 0.6; }
+
+/* ── COUNTDOWN ── */
+.countdown-wrap {
+  width: 100%; margin-top: 1.2rem;
+  display: none; flex-direction: column; align-items: center; gap: 0.5rem;
+}
+.countdown-wrap.show { display: flex; }
+
+.countdown-bar-track {
+  width: 100%; height: 10px;
+  background: rgba(255,255,255,0.07); border-radius: 99px; overflow: hidden;
+}
+.countdown-bar-fill {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, var(--green), var(--yellow), var(--red));
+  transition: width 1s linear, background 0.5s;
+  width: 100%;
+}
+.countdown-row { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.countdown-num {
+  font-family: 'Teko', sans-serif; font-size: 2.5rem; font-weight: 700;
+  letter-spacing: 0.04em; line-height: 1;
+  transition: color 0.3s;
+}
+.countdown-lbl { font-size: 0.48rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--dim); }
+
+.timer-btn {
+  font-family: 'Teko', sans-serif; font-size: 1.15rem; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  border: 1px solid rgba(255,255,255,0.15); border-radius: 6px;
+  background: transparent; color: var(--dim); cursor: pointer; padding: 0.3rem 0.9rem 0.25rem;
+  transition: all 0.15s;
+}
+.timer-btn:hover { border-color: var(--green); color: var(--green); }
+.timer-btn.running { border-color: var(--red); color: var(--red); }
+
+/* ── REFERENCE TABLE ── */
+.ref-toggle {
+  margin-top: 1.8rem; background: transparent; border: 1px solid var(--border);
+  border-radius: 6px; color: var(--dim); cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 0.55rem;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  padding: 0.45rem 1rem; transition: all 0.15s;
+}
+.ref-toggle:hover { border-color: rgba(255,255,255,0.25); color: var(--ink); }
+
+.ref-panel {
+  display: none; width: 100%; margin-top: 1rem;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden;
+}
+.ref-panel.open { display: block; }
+.ref-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+.ref-table th, .ref-table td {
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 0.38rem 0.65rem; text-align: left;
+}
+.ref-table th {
+  background: rgba(255,255,255,0.03);
+  font-size: 0.46rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--dim);
+  font-weight: 500;
+}
+.ref-table td { color: rgba(240,236,228,0.75); }
+.ref-table .cod { color: var(--yellow); font-family: 'Teko', sans-serif; font-size: 1rem; font-weight: 600; text-align: center; width: 2.2rem; }
+.ref-table .stcod { color: var(--pink); font-family: 'Teko', sans-serif; font-size: 1rem; font-weight: 600; text-align: center; width: 2.2rem; }
+.ref-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+@media(max-width:580px){ .ref-panel{ display:none !important; } .ref-toggle{ display:none; } }
+</style>
+</head>
+<body>
+<div class="noise"></div>
+
+<div class="wrap">
+
+  <div class="live-badge">
+    <div class="live-dot"></div>
+    Live
+  </div>
+
+  <div class="heading">
+    <h1>TIKTOK<br><span>RANDOMISER</span></h1>
+    <div class="sub">Extension Mathematics &nbsp;·&nbsp; 10–12 second performance</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- REELS -->
+  <div class="reels">
+
+    <div class="reel-card concept" id="conceptCard">
+      <div class="reel-header">
+        <span class="reel-label">Maths Concept</span>
+        <span class="reel-code" id="conceptCode">—</span>
+      </div>
+      <div class="drum-window">
+        <div class="drum-line"></div>
+        <div class="drum-track" id="conceptTrack"></div>
+      </div>
+      <div class="reel-footer">
+        <span class="reel-hint">Concept to explain</span>
+      </div>
+    </div>
+
+    <div class="reel-card style" id="styleCard">
+      <div class="reel-header">
+        <span class="reel-label">TikTok Style</span>
+        <span class="reel-code" id="styleCode">—</span>
+      </div>
+      <div class="drum-window">
+        <div class="drum-line"></div>
+        <div class="drum-track" id="styleTrack"></div>
+      </div>
+      <div class="reel-footer">
+        <span class="reel-hint">Performance persona</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PROMPT BANNER -->
+  <div class="prompt-banner" id="promptBanner">
+    <div class="prompt-label">Your challenge</div>
+    <div class="prompt-text" id="promptText"></div>
+  </div>
+
+  <!-- BUTTONS -->
+  <div class="buttons">
+    <button class="btn btn-concept" onclick="spinConcept()">Spin Concept</button>
+    <button class="btn btn-both"    id="bothBtn" onclick="spinBoth()">⚡ Spin Both</button>
+    <button class="btn btn-style"   onclick="spinStyle()">Spin Style</button>
+  </div>
+
+  <!-- COUNTDOWN -->
+  <div class="countdown-wrap" id="countdownWrap">
+    <div class="countdown-row">
+      <span class="countdown-lbl">Performance timer</span>
+      <span class="countdown-num" id="countdownNum" style="color:var(--green)">12</span>
+      <button class="timer-btn" id="timerBtn" onclick="toggleTimer()">▶ Start</button>
+    </div>
+    <div class="countdown-bar-track">
+      <div class="countdown-bar-fill" id="countdownFill"></div>
+    </div>
+  </div>
+
+  <!-- REFERENCE TOGGLE -->
+  <button class="ref-toggle" onclick="toggleRef()">▾ &nbsp;Reference grid</button>
+  <div class="ref-panel" id="refPanel">
+    <table class="ref-table">
+      <thead>
+        <tr>
+          <th class="cod">Code</th>
+          <th>Concept</th>
+          <th class="stcod">#</th>
+          <th>TikTok Style</th>
+        </tr>
+      </thead>
+      <tbody id="refBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────
+const CONCEPTS = [
+  { code:"A",  text:"The derivative of eᵏˣ" },
+  { code:"B",  text:"Why the chain rule actually works" },
+  { code:"C",  text:"Proving sin²x + cos²x = 1" },
+  { code:"D",  text:"What a modulus graph really means" },
+  { code:"E",  text:"Interpreting a tangent as a limit" },
+  { code:"F",  text:"Why inverse trig functions are restricted" },
+  { code:"G",  text:"The idea behind Euler's number e" },
+  { code:"H",  text:"Solving a differential equation by separation" },
+  { code:"I",  text:"What a vector actually is (not the textbook version)" },
+  { code:"J",  text:"Why complex numbers aren't 'imaginary' at all" },
+  { code:"K",  text:"The geometric meaning of a derivative" },
+  { code:"L",  text:"Why ln x grows so slowly" },
+  { code:"M",  text:"The purpose of parametric equations" },
+  { code:"N",  text:"How to visualise a 3D vector projection" },
+  { code:"O",  text:"Why the product rule is unavoidable" },
+  { code:"P",  text:"The intuition behind the binomial expansion" },
+  { code:"Q",  text:"What the discriminant is really telling you" },
+  { code:"R",  text:"Why integration by parts feels like black magic" },
+  { code:"S",  text:"The meaning of 'orthogonal' in real life" },
+  { code:"T",  text:"Why eⁱᶿ is secretly the coolest thing in maths" },
+];
+
+const STYLES = [
+  { code:"1",  text:"Conspiracy Theorist",      emoji:"🕵️" },
+  { code:"2",  text:"Storytime Girl",            emoji:"📖" },
+  { code:"3",  text:"Gym Bro",                   emoji:"💪" },
+  { code:"4",  text:"Cooking Tutorial",          emoji:"👨‍🍳" },
+  { code:"5",  text:"POV",                       emoji:"📸" },
+  { code:"6",  text:"Alpha Podcast Bro",         emoji:"🎙️" },
+  { code:"7",  text:"Corporate Training Video",  emoji:"🏢" },
+  { code:"8",  text:"True Crime Narrator",       emoji:"🔦" },
+  { code:"9",  text:"ASMR",                      emoji:"🎧" },
+  { code:"10", text:"Hot Take Rant",             emoji:"🔥" },
+  { code:"11", text:"Nature Documentary",        emoji:"🌿" },
+  { code:"12", text:"Excited Unboxing",          emoji:"📦" },
+  { code:"13", text:"Fashion Get Ready With Me", emoji:"👗" },
+  { code:"14", text:"Life Coach",                emoji:"✨" },
+  { code:"15", text:"Angry Gamer",               emoji:"🎮" },
+];
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let currentConcept = null;
+let currentStyle   = null;
+let spinning = { concept: false, style: false };
+
+// Timer
+let timerInterval = null, timerSecs = 12, timerRunning = false;
+const TIMER_TOTAL = 12;
+
+// ─────────────────────────────────────────────
+// BUILD REFERENCE TABLE
+// ─────────────────────────────────────────────
+function buildRef() {
+  const tbody = document.getElementById('refBody');
+  const max = Math.max(CONCEPTS.length, STYLES.length);
+  for (let i = 0; i < max; i++) {
+    const c = CONCEPTS[i], s = STYLES[i];
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td class="cod">${c ? c.code : ''}</td>` +
+      `<td>${c ? c.text : ''}</td>` +
+      `<td class="stcod">${s ? s.code : ''}</td>` +
+      `<td>${s ? (s.emoji + ' ' + s.text) : ''}</td>`;
+    tbody.appendChild(tr);
+  }
+}
+buildRef();
+
+// ─────────────────────────────────────────────
+// BUILD DRUM TRACKS
+// ─────────────────────────────────────────────
+function buildTrack(trackEl, items) {
+  trackEl.innerHTML = '';
+  // triple the items for seamless looping illusion
+  const pool = [...items, ...items, ...items];
+  pool.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'drum-item';
+    div.textContent = item.text;
+    trackEl.appendChild(div);
+  });
+}
+
+buildTrack(document.getElementById('conceptTrack'), CONCEPTS);
+buildTrack(document.getElementById('styleTrack'),   STYLES);
+
+// ─────────────────────────────────────────────
+// SPIN
+// ─────────────────────────────────────────────
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function spinDrum(trackId, codeId, items, onDone) {
+  const track = document.getElementById(trackId);
+  const codeEl = document.getElementById(codeId);
+  const itemH = 110;
+  const totalItems = items.length;
+
+  // Pick target
+  const target = pick(items);
+  const targetIdx = items.indexOf(target);
+
+  // We'll land on the item in the second batch (offset by totalItems)
+  const landingIdx = totalItems + targetIdx;
+
+  // How many extra full spins before landing?
+  const extraSpins = 3 + Math.floor(Math.random() * 3); // 3-5 full rotations
+  const totalTurns = extraSpins * totalItems + landingIdx;
+  const finalY     = -(totalTurns * itemH) + itemH; // centre on item (offset so it lands in window centre)
+
+  codeEl.textContent = '…';
+
+  // Remove old active
+  track.querySelectorAll('.drum-item').forEach(el => el.classList.remove('active'));
+
+  // Animate in steps — fast at start, easing to stop
+  const DURATION   = 1100; // ms
+  const startTime  = performance.now();
+  const startY     = getCurrentY(track);
+
+  function ease(t) {
+    // custom ease: fast out → decelerate into position
+    return t < 0.6 ? (t / 0.6) * 0.85 : 0.85 + 0.15 * easeOut((t - 0.6) / 0.4);
+  }
+  function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+  function step(now) {
+    const elapsed = now - startTime;
+    const t       = Math.min(elapsed / DURATION, 1);
+    const y       = startY + (finalY - startY) * ease(t);
+    track.style.transform = `translateY(${y}px)`;
+
+    if (t < 1) {
+      requestAnimationFrame(step);
+    } else {
+      track.style.transform = `translateY(${finalY}px)`;
+      // Highlight the active item
+      const allItems = track.querySelectorAll('.drum-item');
+      allItems.forEach(el => el.classList.remove('active'));
+      // The item that's now in the centre = landingIdx in the 3x pool
+      allItems[landingIdx].classList.add('active');
+      codeEl.textContent = target.code;
+      onDone(target);
+    }
+  }
+
+  requestAnimationFrame(step);
+}
+
+function getCurrentY(el) {
+  const t = el.style.transform;
+  if (!t) return 0;
+  const m = t.match(/translateY\(([^)]+)px\)/);
+  return m ? parseFloat(m[1]) : 0;
+}
+
+function spinConcept(cb) {
+  if (spinning.concept) return;
+  spinning.concept = true;
+  spinDrum('conceptTrack', 'conceptCode', CONCEPTS, (result) => {
+    currentConcept = result;
+    spinning.concept = false;
+    updatePrompt();
+    if (cb) cb();
+  });
+}
+
+function spinStyle(cb) {
+  if (spinning.style) return;
+  spinning.style = true;
+  spinDrum('styleTrack', 'styleCode', STYLES, (result) => {
+    currentStyle = result;
+    spinning.style = false;
+    updatePrompt();
+    if (cb) cb();
+  });
+}
+
+function spinBoth() {
+  const btn = document.getElementById('bothBtn');
+  btn.classList.add('spinning');
+  let done = 0;
+  const finish = () => { done++; if (done === 2) { btn.classList.remove('spinning'); } };
+  spinConcept(finish);
+  setTimeout(() => spinStyle(finish), 80); // slight stagger looks great
+}
+
+// ─────────────────────────────────────────────
+// PROMPT BANNER
+// ─────────────────────────────────────────────
+function updatePrompt() {
+  if (!currentConcept || !currentStyle) return;
+  const banner = document.getElementById('promptBanner');
+  const text   = document.getElementById('promptText');
+  banner.classList.add('show');
+  text.innerHTML =
+    `Explain <span class="c-accent">"${currentConcept.text}"</span><br>` +
+    `as a <span class="s-accent">${currentStyle.emoji} ${currentStyle.text}</span>`;
+
+  // Show timer
+  document.getElementById('countdownWrap').classList.add('show');
+  resetTimer();
+}
+
+// ─────────────────────────────────────────────
+// COUNTDOWN TIMER
+// ─────────────────────────────────────────────
+function toggleTimer() {
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('timerBtn').textContent = '▶ Start';
+    document.getElementById('timerBtn').classList.remove('running');
+  } else {
+    startTimer();
+  }
+}
+
+function startTimer() {
+  if (timerRunning) return;
+  timerRunning = true;
+  document.getElementById('timerBtn').textContent  = '■ Stop';
+  document.getElementById('timerBtn').classList.add('running');
+
+  timerInterval = setInterval(() => {
+    timerSecs--;
+    updateTimerDisplay();
+    if (timerSecs <= 0) {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      document.getElementById('timerBtn').textContent = '↺ Reset';
+      document.getElementById('timerBtn').classList.remove('running');
+      document.getElementById('countdownNum').style.color = 'var(--red)';
+    }
+  }, 1000);
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerSecs = TIMER_TOTAL;
+  document.getElementById('timerBtn').textContent = '▶ Start';
+  document.getElementById('timerBtn').classList.remove('running');
+  updateTimerDisplay();
+}
+
+function updateTimerDisplay() {
+  const fill = document.getElementById('countdownFill');
+  const num  = document.getElementById('countdownNum');
+  const pct  = (timerSecs / TIMER_TOTAL) * 100;
+  fill.style.width = pct + '%';
+  num.textContent  = timerSecs;
+
+  if (timerSecs > 8)      num.style.color = 'var(--green)';
+  else if (timerSecs > 4) num.style.color = 'var(--yellow)';
+  else                    num.style.color = 'var(--red)';
+}
+
+// ─────────────────────────────────────────────
+// REFERENCE GRID
+// ─────────────────────────────────────────────
+let refOpen = false;
+function toggleRef() {
+  refOpen = !refOpen;
+  document.getElementById('refPanel').classList.toggle('open', refOpen);
+  document.querySelector('.ref-toggle').textContent = refOpen ? '▴  Reference grid' : '▾  Reference grid';
+}
+
+// ─────────────────────────────────────────────
+// INIT — set tracks to a starting position
+// ─────────────────────────────────────────────
+function initTracks() {
+  // Position both drums at item 0 of the middle batch
+  [
+    { trackId: 'conceptTrack', len: CONCEPTS.length },
+    { trackId: 'styleTrack',   len: STYLES.length   },
+  ].forEach(({ trackId, len }) => {
+    const track = document.getElementById(trackId);
+    track.style.transition = 'none';
+    const startY = -(len * 110) + 110; // point at item 0 of 2nd batch, centred
+    track.style.transform = `translateY(${startY}px)`;
+  });
+}
+initTracks();
+</script>
+</body>
+</html>
