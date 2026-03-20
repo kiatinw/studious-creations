@@ -299,6 +299,13 @@ body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;min-
             <option value="ode">Ode to Joy &mdash; Beethoven opener</option>
             <option value="furelise">F&uuml;r Elise &mdash; Beethoven opening</option>
           </optgroup>
+          <optgroup label="🤪 Unhinged & Chaos">
+            <option value="airraid">Air Raid Siren &mdash; Impending doom</option>
+            <option value="techno">Techno Drop &mdash; Untz untz untz</option>
+            <option value="foghorn">Foghorn &mdash; Deep ship blast</option>
+            <option value="quack">Quack Attack &mdash; A flock of ducks</option>
+            <option value="glitch">Glitch Storm &mdash; Digital corruption</option>
+          </optgroup>
           <optgroup label="&#128263; Other">
             <option value="silent">Silent &mdash; No sound</option>
           </optgroup>
@@ -540,6 +547,11 @@ function playTone(type){
     habanera:()=>{const mel=[392,392,392,0,370,392,0,392,349,330,294,262,294,330,349,392,392],durs=[.15,.15,.15,.15,.15,.3,.15,.15,.15,.15,.15,.15,.15,.15,.15,.3,.15];let off=0;mel.forEach((f,i)=>{if(f>0)sineNote(ctx,f,t,off,.5,durs[i]+.05);off+=durs[i];});},
     ode:()=>{const mel=[330,330,349,392,392,349,330,294,262,262,294,330,330,294,294],durs=[.22,.22,.22,.22,.22,.22,.22,.22,.22,.22,.22,.22,.33,.11,.44];let off=0;mel.forEach((f,i)=>{squareNote(ctx,f,t,off,.25,durs[i]);sineNote(ctx,f*2,t,off,.1,durs[i]);off+=durs[i]+.02;});},
     furelise:()=>{const mel=[659,622,659,622,659,494,587,523,440],durs=[.2,.2,.2,.2,.2,.2,.2,.2,.5];let off=0;mel.forEach((f,i)=>{sineNote(ctx,f,t,off,.45,durs[i]+.05);off+=durs[i]+.01;});},
+    airraid:()=>{const o=ctx.createOscillator(),e=ctx.createGain();o.type='sawtooth';o.frequency.setValueAtTime(220,t);o.frequency.linearRampToValueAtTime(600,t+2);o.frequency.linearRampToValueAtTime(220,t+4);e.gain.setValueAtTime(.2,t);e.gain.linearRampToValueAtTime(.2,t+3.9);e.gain.exponentialRampToValueAtTime(.001,t+4);o.connect(e);e.connect(ctx.destination);o.start(t);o.stop(t+4.1);},
+    techno:()=>{for(let i=0;i<8;i++){const st=t+i*.25;const o=ctx.createOscillator(),e=ctx.createGain();o.frequency.setValueAtTime(150,st);o.frequency.exponentialRampToValueAtTime(40,st+.1);e.gain.setValueAtTime(1,st);e.gain.exponentialRampToValueAtTime(.001,st+.2);o.connect(e);e.connect(ctx.destination);o.start(st);o.stop(st+.2);}const o2=ctx.createOscillator(),e2=ctx.createGain(),f2=ctx.createBiquadFilter();o2.type='sawtooth';o2.frequency.value=55;f2.type='lowpass';f2.Q.value=15;f2.frequency.setValueAtTime(100,t);f2.frequency.linearRampToValueAtTime(1200,t+2);e2.gain.setValueAtTime(.3,t);e2.gain.linearRampToValueAtTime(.3,t+1.8);e2.gain.exponentialRampToValueAtTime(.001,t+2);o2.connect(f2);f2.connect(e2);e2.connect(ctx.destination);o2.start(t);o2.stop(t+2);},
+    foghorn:()=>{const o=ctx.createOscillator(),o2=ctx.createOscillator(),e=ctx.createGain(),f=ctx.createBiquadFilter();o.type='sawtooth';o.frequency.value=65;o2.type='sawtooth';o2.frequency.value=66;f.type='lowpass';f.frequency.value=300;e.gain.setValueAtTime(0,t);e.gain.linearRampToValueAtTime(.8,t+.2);e.gain.setValueAtTime(.8,t+2.5);e.gain.exponentialRampToValueAtTime(.001,t+3);o.connect(f);o2.connect(f);f.connect(e);e.connect(ctx.destination);o.start(t);o.stop(t+3.1);o2.start(t);o2.stop(t+3.1);},
+    quack:()=>{for(let i=0;i<8;i++){const st=t+i*.12+Math.random()*.05;const o=ctx.createOscillator(),e=ctx.createGain(),f=ctx.createBiquadFilter();o.type='sawtooth';o.frequency.value=300+Math.random()*100;f.type='bandpass';f.Q.value=8;f.frequency.setValueAtTime(600,st);f.frequency.linearRampToValueAtTime(1400,st+.06);f.frequency.linearRampToValueAtTime(600,st+.12);e.gain.setValueAtTime(.4,st);e.gain.exponentialRampToValueAtTime(.001,st+.12);o.connect(f);f.connect(e);e.connect(ctx.destination);o.start(st);o.stop(st+.15);}},
+    glitch:()=>{for(let i=0;i<20;i++){const st=t+Math.random()*1.5,dur=Math.random()*.08+.01,o=ctx.createOscillator(),e=ctx.createGain();o.type=['sine','square','sawtooth','triangle'][Math.floor(Math.random()*4)];o.frequency.value=Math.random()*3000+100;if(Math.random()>.5)o.frequency.linearRampToValueAtTime(Math.random()*3000,st+dur);e.gain.setValueAtTime(.2,st);e.gain.linearRampToValueAtTime(0,st+dur);o.connect(e);e.connect(ctx.destination);o.start(st);o.stop(st+dur);}},
   };
   (P[type]||P.chime)();
 }
