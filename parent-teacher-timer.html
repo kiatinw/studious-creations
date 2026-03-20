@@ -261,7 +261,7 @@ body {
   align-items: center; justify-content: center;
   width: 100%; height: 100vh;
   padding: 10vh 4vw 6vh;
-  gap: 0;
+  gap: 3vh;
 }
 
 /* Current time — large clock at top */
@@ -270,16 +270,16 @@ body {
   font-size: clamp(4.5rem, 14vh, 11rem);
   font-weight: 300; letter-spacing: 0.08em;
   color: rgba(240,236,228,0.85);
-  line-height: 1; margin-bottom: 3vh;
+  line-height: 1;
   text-align: center;
 }
 
-/* Label above timer */
+/* Label sits inside centre-row above the ring, via a wrapper */
 .display-label {
   font-size: clamp(0.55rem, 1.6vh, 0.9rem);
   letter-spacing: 0.55em; text-transform: uppercase;
   color: rgba(240,236,228,0.35);
-  margin-bottom: 2vh;
+  text-align: center;
   transition: color 0.5s;
 }
 
@@ -292,28 +292,46 @@ body {
   width: 100%;
 }
 
-/* The big countdown sits inside the ring */
+/* Wraps label + ring together so current-time is above both ring and info */
+.ring-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5vh;
+  flex-shrink: 0;
+}
+
+/* The big countdown sits inside the ring (position set in .ring-wrap block above) */
 .display-countdown {
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(6rem, 20vh, 16rem);
+  font-size: clamp(5rem, 18vh, 14rem);
   font-weight: 300; line-height: 1;
   letter-spacing: -0.02em;
   color: var(--ink);
   transition: color 0.6s ease;
   text-align: center;
-  white-space: nowrap;
 }
 
 /* Thin arc progress ring */
 .ring-wrap {
+  /* width/height set explicitly in JS to match SVG size */
   position: relative;
-  display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
 }
 .progress-ring {
+  /* SVG sits at top-left of ring-wrap, sized to fill it */
   position: absolute;
+  top: 0; left: 0;
   transform: rotate(-90deg);
   pointer-events: none;
+}
+.display-countdown {
+  /* centred inside ring-wrap via absolute positioning */
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
 }
 .progress-ring-bg { fill: none; stroke: rgba(255,255,255,0.07); }
 .progress-ring-fill {
@@ -558,18 +576,22 @@ body {
 
   <!-- RUNNING STATE -->
   <div class="display-main hidden" id="displayRunning">
+    <!-- Current time centred above everything -->
     <div class="display-current-time" id="displayNow">00:00</div>
-    <div class="display-label">Time remaining in this interview</div>
+    <!-- Centre row: ring-col (label + ring) beside info panel -->
     <div class="display-centre-row">
-      <!-- Ring with countdown inside -->
-      <div class="ring-wrap" id="ringWrap">
-        <svg class="progress-ring" id="progressRing" width="0" height="0">
-          <circle class="progress-ring-bg" id="ringBg"/>
-          <circle class="progress-ring-fill" id="ringFill"/>
-        </svg>
-        <div class="display-countdown" id="displayCountdown">5:00</div>
+      <!-- Label + ring stacked in a column -->
+      <div class="ring-col">
+        <div class="display-label">Time remaining in this interview</div>
+        <div class="ring-wrap" id="ringWrap">
+          <svg class="progress-ring" id="progressRing" width="0" height="0">
+            <circle class="progress-ring-bg" id="ringBg"/>
+            <circle class="progress-ring-fill" id="ringFill"/>
+          </svg>
+          <div class="display-countdown" id="displayCountdown">5:00</div>
+        </div>
       </div>
-      <!-- Info panel to the right -->
+      <!-- Info panel — vertically centred beside ring -->
       <div class="display-session-panel">
         <div class="session-item">
           <span class="session-val" id="sessionInterviewNum">1</span>
@@ -829,6 +851,11 @@ function resizeRing() {
   document.getElementById('ringFill').setAttribute('stroke-width', strokeW);
   document.getElementById('ringFill').style.strokeDasharray = ringCirc;
   document.getElementById('ringFill').style.strokeDashoffset = 0;
+
+  // Critically: set ring-wrap explicit size so the SVG doesn't bleed out of flex bounds
+  const wrap = document.getElementById('ringWrap');
+  wrap.style.width  = size + 'px';
+  wrap.style.height = size + 'px';
 }
 window.addEventListener('resize', resizeRing);
 
