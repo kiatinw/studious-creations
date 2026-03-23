@@ -111,6 +111,28 @@ body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;min-
 .display-bottom{position:absolute;bottom:2.5vh;left:0;right:0;display:flex;align-items:center;justify-content:center;z-index:2;}
 .display-event-name{font-size:clamp(.5rem,1.8vh,999rem);letter-spacing:.4em;text-transform:uppercase;color:rgba(240,236,228,.25);}
 .hidden{display:none!important;}
+
+/* ── CONTROLS OVERLAY ── */
+.display-controls{position:absolute;bottom:2vh;right:2vw;z-index:20;display:flex;gap:1.2rem;align-items:center;background:rgba(13,27,42,0.85);border:1px solid var(--rule);backdrop-filter:blur(4px);padding:.6rem 1rem;border-radius:12px;transition:opacity .3s;opacity:.3;}
+.display-controls:hover{opacity:1;}
+.control-group{display:flex;flex-direction:column;gap:.2rem;align-items:center;}
+.control-lbl{font-size:.45rem;text-transform:uppercase;letter-spacing:.15em;color:var(--ink2);}
+.offset-row{display:flex;gap:.4rem;align-items:center;}
+.offset-btn{background:var(--surface2);border:1px solid var(--rule);color:var(--ink);border-radius:4px;cursor:pointer;padding:.2rem .5rem;font-size:.75rem;font-family:var(--display-font);transition:border-color .2s;}
+.offset-btn:hover{border-color:var(--accent);color:var(--accent);}
+.offset-val{font-family:var(--display-font);font-variant-numeric:tabular-nums;min-width:2rem;text-align:center;font-size:.9rem;}
+.ctrl-div{width:1px;height:2rem;background:var(--rule);}
+.bell-btn{background:transparent;border:1px solid var(--rule);color:var(--ink);border-radius:6px;padding:.5rem .9rem;cursor:pointer;font-size:1rem;transition:all .2s;line-height:1;}
+.bell-btn:hover{background:var(--accent);border-color:var(--accent);color:#000;box-shadow:0 0 15px rgba(200,169,110,.4);}
+
+/* ── ATTENTION OVERLAY ── */
+#attentionOverlay{position:fixed;inset:0;z-index:3000;background:rgba(13,27,42,0.95);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;flex-direction:column;animation:fadeIn .3s ease;}
+.attention-box{text-align:center;color:var(--accent);}
+.attention-text{font-family:'Cormorant Garamond',serif;font-size:clamp(4rem,15vw,12rem);letter-spacing:.1em;font-weight:700;text-transform:uppercase;margin-bottom:2rem;text-shadow:0 0 30px rgba(200,169,110,.4);}
+.attention-close{background:transparent;border:1px solid var(--accent);color:var(--accent);padding:1rem 3rem;font-size:1.2rem;text-transform:uppercase;letter-spacing:.2em;cursor:pointer;transition:all .2s;border-radius:4px;}
+.attention-close:hover{background:var(--accent);color:var(--bg);}
+.attention-icon{font-size:4rem;margin-bottom:1rem;animation:bellShake 1s ease infinite;}
+@keyframes bellShake{0%,100%{transform:rotate(0deg)}25%{transform:rotate(15deg)}75%{transform:rotate(-15deg)}}
 </style>
 </head>
 <body>
@@ -322,6 +344,114 @@ body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;min-
         <button class="tone-preview-btn" style="margin-top:0" onclick="previewTone()">&#9654; &nbsp;Preview</button>
       </div>
     </div>
+    <!-- Attention Tone -->
+    <div class="field-row" style="align-items:flex-end;margin-top:1.2rem;margin-bottom:0">
+      <div class="field"><label>Manual Bell Tone</label>
+        <select id="attnToneSelect">
+          <optgroup label="✨ New &amp; Enhanced">
+            <option value="sessionStart">Session Start &mdash; Welcoming chime</option>
+            <option value="changeover">Changeover &mdash; Clear two-tone alert</option>
+            <option value="grandFanfare">Grand Fanfare &mdash; Ceremonial brass</option>
+            <option value="ambientPad">Ambient Pad &mdash; Calm resolving chord</option>
+          </optgroup>
+          <optgroup label="&#127514; Bells &amp; Chimes">
+            <option value="chime">Chime &mdash; Gentle single bell</option>
+            <option value="double">Double Chime &mdash; Two strikes</option>
+            <option value="triple">Triple Chime &mdash; Three ascending</option>
+            <option value="tubular">Tubular Bell &mdash; Orchestral</option>
+            <option value="deepbell">Deep Bell &mdash; Low resonant</option>
+            <option value="cathedral">Cathedral &mdash; Slow deep toll</option>
+            <option value="tinybell">Tiny Bell &mdash; High delicate ring</option>
+            <option value="cowbell">Cowbell &mdash; More cowbell</option>
+            <option value="churchcarillon">Church Carillon &mdash; Full peal of bells</option>
+            <option value="vespers">Vespers &mdash; Evening bell sequence</option>
+          </optgroup>
+          <optgroup label="&#127929; Mallet Instruments">
+            <option value="marimba">Marimba &mdash; Warm wooden</option>
+            <option value="xylophone">Xylophone &mdash; Bright ascending run</option>
+            <option value="vibraphone">Vibraphone &mdash; Shimmering chord</option>
+            <option value="steelpan">Steel Pan &mdash; Caribbean shimmer</option>
+            <option value="celesta">Celesta &mdash; Delicate music-box</option>
+            <option value="orchestrahit">Orchestra Hit &mdash; 80s synth stab</option>
+          </optgroup>
+          <optgroup label="&#127925; Strings &amp; Harp">
+            <option value="harp">Harp Glissando &mdash; Rising sweep</option>
+            <option value="pizzicato">Pizzicato &mdash; Plucked strings</option>
+            <option value="harpcascade">Harp Cascade &mdash; Down then up</option>
+            <option value="stringpizzrun">String Pizz Run &mdash; Quick ascending pluck</option>
+          </optgroup>
+          <optgroup label="&#127928; Tones &amp; Pads">
+            <option value="soft">Soft Tone &mdash; Low sine wave</option>
+            <option value="gentle3">Gentle Rise &mdash; Soft ascending</option>
+            <option value="meditation">Meditation Bowl &mdash; Long resonance</option>
+            <option value="warmpad">Warm Pad &mdash; Choir-like swell</option>
+            <option value="crystal">Crystal &mdash; Pure high overtones</option>
+            <option value="sine3">Sine Chord &mdash; Three harmonics</option>
+            <option value="spacesynth">Space Synth &mdash; Sci-fi whoosh pad</option>
+            <option value="ufo">UFO &mdash; Wobbling alien signal</option>
+          </optgroup>
+          <optgroup label="&#9889; Alerts &amp; Signals">
+            <option value="ding">Ding &mdash; Short bright ping</option>
+            <option value="doorbell">Doorbell &mdash; Ding-dong</option>
+            <option value="alert">Attention &mdash; Two-tone alert</option>
+            <option value="cuckoo">Cuckoo &mdash; Descending two tones</option>
+            <option value="schoolbell" selected>School Bell &mdash; Classic ring</option>
+            <option value="beepbeep">Beep Beep &mdash; Double electronic</option>
+            <option value="softping">Soft Ping &mdash; Muted notification</option>
+            <option value="riser">Riser &mdash; Sweeping upward</option>
+            <option value="airhorn">Air Horn &mdash; BWAAAMP</option>
+            <option value="submarine">Submarine &mdash; Sonar ping</option>
+            <option value="oldphone">Old Phone &mdash; Retro telephone ring</option>
+            <option value="levelup">Level Up &mdash; Video game success</option>
+            <option value="powerup">Power Up &mdash; 8-bit item collect</option>
+            <option value="error">Error Bloop &mdash; Descending sad tones</option>
+          </optgroup>
+          <optgroup label="&#127930; Brass &amp; Wind">
+            <option value="fanfare">Fanfare &mdash; Short brass motif</option>
+            <option value="bugle">Bugle Call &mdash; Reveille figure</option>
+            <option value="horn">French Horn &mdash; Warm single note</option>
+            <option value="posthorn">Post Horn &mdash; Two-note call</option>
+            <option value="royalfanfare">Royal Fanfare &mdash; Grand ceremonial</option>
+            <option value="jazzriff">Jazz Riff &mdash; Cheeky brass lick</option>
+          </optgroup>
+          <optgroup label="&#127941; Percussion">
+            <option value="gong">Gong &mdash; Deep resonant strike</option>
+            <option value="snare">Snare Roll &mdash; Short flourish</option>
+            <option value="timpani">Timpani &mdash; Orchestral drum</option>
+            <option value="gamelan">Gamelan &mdash; Indonesian bronze</option>
+            <option value="windchime">Wind Chime &mdash; Random gentle</option>
+            <option value="rimshot">Rimshot &mdash; Ba-dum tss</option>
+            <option value="taiko">Taiko &mdash; Japanese war drum</option>
+          </optgroup>
+          <optgroup label="&#127926; Jingles &amp; Tunes">
+            <option value="bigben">Big Ben &mdash; Westminster chimes</option>
+            <option value="habanera">Habanera &mdash; Carmen melody</option>
+            <option value="ode">Ode to Joy &mdash; Beethoven opener</option>
+            <option value="furelise">F&uuml;r Elise &mdash; Beethoven opening</option>
+          </optgroup>
+          <optgroup label="🖖 Star Trek">
+            <option value="stTheme">Star Trek Theme</option>
+            <option value="tngDoor">TNG Door Chime</option>
+            <option value="tngComm">TNG Combadge</option>
+            <option value="tosComm">TOS Communicator</option>
+            <option value="redAlert">Red Alert</option>
+          </optgroup>
+          <optgroup label="🤪 Unhinged & Chaos">
+            <option value="airraid">Air Raid Siren &mdash; Impending doom</option>
+            <option value="techno">Techno Drop &mdash; Untz untz untz</option>
+            <option value="foghorn">Foghorn &mdash; Deep ship blast</option>
+            <option value="quack">Quack Attack &mdash; A flock of ducks</option>
+            <option value="glitch">Glitch Storm &mdash; Digital corruption</option>
+          </optgroup>
+          <optgroup label="&#128263; Other">
+            <option value="silent">Silent &mdash; No sound</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="field" style="flex:0 0 auto"><label>&nbsp;</label>
+        <button class="tone-preview-btn" style="margin-top:0" onclick="previewAttnTone()">&#9654; &nbsp;Preview</button>
+      </div>
+    </div>
   </div>
 
   <button class="launch-btn" onclick="launchDisplay()">Open Display Screen</button>
@@ -376,6 +506,20 @@ body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;min-
   </div>
 
   <div class="display-bottom"><span class="display-event-name" id="displayEventName"></span></div>
+
+  <!-- LIVE BELL BUTTON -->
+  <div class="display-controls">
+    <button class="bell-btn" onclick="manualBell()" title="Attention">🔔</button>
+  </div>
+
+  <!-- ATTENTION OVERLAY -->
+  <div id="attentionOverlay" class="hidden">
+    <div class="attention-box">
+      <div class="attention-icon">🔔</div>
+      <div class="attention-text">ATTENTION</div>
+      <button class="attention-close" onclick="closeAttention()">Close</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -606,6 +750,16 @@ function applyFont(){
 let wakeLock=null;
 let logoDataUrl=null,tickInterval=null,sessionStart=null,interviewDuration=5,lastInterviewIdx=-1;
 
+function closeAttention() {
+  document.getElementById('attentionOverlay').classList.add('hidden');
+}
+
+function manualBell(){
+  const ctx=getAudio();if(ctx.state==='suspended')ctx.resume();
+  playTone(document.getElementById('attnToneSelect').value);
+  document.getElementById('attentionOverlay').classList.remove('hidden');
+}
+
 function toggleCustomLen(){
   const sel=document.getElementById('interviewLen');
   const inp=document.getElementById('customLen');
@@ -616,6 +770,11 @@ function previewTone(){
   const ctx=getAudio();
   if(ctx.state==='suspended')ctx.resume();
   playTone(document.getElementById('toneSelect').value);
+}
+function previewAttnTone(){
+  const ctx=getAudio();
+  if(ctx.state==='suspended')ctx.resume();
+  playTone(document.getElementById('attnToneSelect').value);
 }
 function handleLogoUpload(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{logoDataUrl=ev.target.result;document.getElementById('logoPreview').src=logoDataUrl;document.getElementById('logoPreview').style.display='block';document.getElementById('logoPlaceholder').style.display='none';document.getElementById('displayLogo').src=logoDataUrl;document.getElementById('displayLogo').style.display='block';};r.readAsDataURL(file);}
 function pickSwatch(el){const tgt=el.dataset.target;document.querySelectorAll(`.swatch[data-target="${tgt}"]`).forEach(s=>s.classList.remove('active'));el.classList.add('active');if(tgt==='primary')document.getElementById('primaryColour').value=el.dataset.col;if(tgt==='secondary')document.getElementById('secondaryColour').value=el.dataset.col;applyColours();}
@@ -679,7 +838,9 @@ window.addEventListener('resize',resizeRing);
 function tick(){
   const now=new Date();
   document.getElementById('displayNow').textContent=fmt12(now);
-  const diffMs=now-sessionStart;
+  const offsetMs=scheduleOffsetMins*60000;
+  const effectiveStart=new Date(sessionStart.getTime()+offsetMs);
+  const diffMs=now-effectiveStart;
   if(diffMs<0){showPrestart(now);updateStatus('waiting');return;}
   updateStatus('running'); showRunning();
   const iMs=interviewDuration*60*1000,elapsed=diffMs%iMs,remainMs=iMs-elapsed;
@@ -710,7 +871,33 @@ function showPrestart(now){
 function showRunning(){document.getElementById('displayPrestart').classList.add('hidden');document.getElementById('displayRunning').classList.remove('hidden');}
 function updateStatus(state){const dot=document.getElementById('statusDot'),txt=document.getElementById('statusTxt');dot.className='status-dot';if(state==='idle'){txt.textContent='Not started';return;}if(state==='waiting'){dot.classList.add('waiting');txt.textContent='Waiting for start time';}if(state==='running'){dot.classList.add('running');txt.textContent='Session running';}}
 
+// Persistence
+function saveSettings() {
+  const s = {
+    school: document.getElementById('schoolName').value,
+    event: document.getElementById('eventName').value,
+    pCol: document.getElementById('primaryColour').value,
+    sCol: document.getElementById('secondaryColour').value,
+    attn: document.getElementById('attnToneSelect').value
+  };
+  localStorage.setItem('ptt_settings', JSON.stringify(s));
+}
+
+function loadSettings() {
+  const s = JSON.parse(localStorage.getItem('ptt_settings'));
+  if (s) {
+    if(s.school) document.getElementById('schoolName').value = s.school;
+    if(s.event) document.getElementById('eventName').value = s.event;
+    if(s.pCol) document.getElementById('primaryColour').value = s.pCol;
+    if(s.sCol) document.getElementById('secondaryColour').value = s.sCol;
+    if(s.attn) document.getElementById('attnToneSelect').value = s.attn;
+  }
+}
+
+// Init
+loadSettings();
 applyColours(); applyFont(); toggleCustomLen();
+document.querySelectorAll('#schoolName, #eventName, #primaryColour, #secondaryColour, #attnToneSelect').forEach(el => el.addEventListener('input', saveSettings));
 </script>
 </body>
 </html>

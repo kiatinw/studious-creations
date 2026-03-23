@@ -118,6 +118,8 @@ h1 em { font-style:italic; color:var(--red); }
   transition:all 0.16s; white-space:nowrap; flex-shrink:0;
 }
 .new-btn:hover { border-color:var(--ink); color:var(--ink); }
+.btn-save { margin-left: auto; border-color: var(--blue); color: var(--blue); }
+.btn-save:hover { background: rgba(44,90,160,0.05); color: var(--blue); border-color: var(--blue); }
 
 /* ── CANVAS ── */
 .canvas-wrap {
@@ -225,6 +227,7 @@ canvas { display:block; width:100%; cursor:default; touch-action:none; }
       <div class="ds-name" id="ds-name">Loading…</div>
       <div class="ds-vars" id="ds-vars"></div>
     </div>
+    <button class="new-btn btn-save" onclick="downloadPlot()">⬇ Save Graph</button>
     <button class="new-btn" onclick="newDataset()">↺ New Dataset</button>
   </div>
 
@@ -606,6 +609,13 @@ function newDataset(){
     `<span class="c-tag ${dataset.pos?'pos':'neg'}">${dataset.pos?'↗ positive':'↘ negative'}</span>`;
 
   resize(); initH(); draw();
+}
+
+function downloadPlot(){
+  const link = document.createElement('a');
+  link.download = `LineOfBestFit_${dataset.name.replace(/\s+/g,'')}.png`;
+  link.href = canvas.toDataURL();
+  link.click();
 }
 
 new ResizeObserver(()=>{if(points)resize();}).observe(canvas.parentElement);

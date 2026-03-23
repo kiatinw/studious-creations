@@ -383,7 +383,7 @@ h1 {
 
 /* ══ FILTER BAR ══ */
 .filter-bar {
-  display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 2rem;
+  display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 2rem; align-items: center;
   opacity: 0; animation: rise 0.65s ease 0.4s forwards;
 }
 .filter-btn {
@@ -394,6 +394,12 @@ h1 {
 }
 .filter-btn:hover { border-color: var(--ink); color: var(--ink); }
 .filter-btn.active { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.search-input {
+  background: transparent; border: 1px solid var(--rule); border-radius: 99px;
+  padding: 0.45rem 1rem; font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  color: var(--ink); outline: none; margin-left: auto; transition: border-color 0.2s;
+}
+.search-input:focus { border-color: var(--ink); }
 
 /* ══ ANIMATION ══ */
 @keyframes rise {
@@ -709,25 +715,51 @@ const cards = document.querySelectorAll('.card');
 const cats = new Set(['All']);
 cards.forEach(c => cats.add(c.querySelector('.card-pill').textContent.trim()));
 
+let activeCat = 'All';
+
+// Filter Function
+function filterGrid(category, searchText = '') {
+  activeCat = category;
+  const term = searchText.toLowerCase();
+
+  document.querySelectorAll('.filter-btn').forEach(b => 
+    b.classList.toggle('active', b.textContent === category));
+
+  cards.forEach(card => {
+    const cCat = card.querySelector('.card-pill').textContent.trim();
+    const title = card.querySelector('.card-title').textContent.toLowerCase();
+    const desc = card.querySelector('.card-desc').textContent.toLowerCase();
+    
+    const matchesCat = category === 'All' || cCat === category;
+    const matchesSearch = title.includes(term) || desc.includes(term);
+
+    if (matchesCat && matchesSearch) {
+      card.style.display = 'flex';
+      card.style.animation = 'none'; 
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+    } else { 
+      card.style.display = 'none'; 
+    }
+  });
+}
+
 cats.forEach(cat => {
   const btn = document.createElement('button');
-  btn.className = `filter-btn ${cat === 'All' ? 'active' : ''}`;
+  btn.className = `filter-btn${cat === 'All' ? ' active' : ''}`;
   btn.textContent = cat;
-  btn.onclick = () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    cards.forEach(card => {
-      const cCat = card.querySelector('.card-pill').textContent.trim();
-      if (cat === 'All' || cCat === cat) {
-        card.style.display = 'flex';
-        card.style.animation = 'none'; // reset anim so it just appears
-        card.style.opacity = '1';
-        card.style.transform = 'translateY(0)';
-      } else { card.style.display = 'none'; }
-    });
-  };
+  btn.onclick = () => filterGrid(cat, document.getElementById('siteSearch').value);
   filterBar.appendChild(btn);
 });
+
+// Search Input
+const searchInput = document.createElement('input');
+searchInput.type = 'text';
+searchInput.id = 'siteSearch';
+searchInput.className = 'search-input';
+searchInput.placeholder = 'Search...';
+searchInput.addEventListener('input', (e) => filterGrid(activeCat, e.target.value));
+filterBar.appendChild(searchInput);
 </script>
 
 <!-- Plausible analytics — privacy-friendly, no cookies -->
