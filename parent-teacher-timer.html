@@ -166,6 +166,7 @@ body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;min-
         <input type="number" id="customLen" min="1" max="60" placeholder="Enter minutes" style="display:none;margin-top:.45rem;">
       </div>
       <div class="field"><label>Transition Time</label>
+      <div class="field"><label>Transition Time (secs)</label>
         <div class="toggle-row">
           <label class="toggle-switch">
             <input type="checkbox" id="transToggle" onchange="toggleTransInput()">
@@ -817,7 +818,7 @@ function handleLogoUpload(e){const file=e.target.files[0];if(!file)return;const 
 function pickSwatch(el){const tgt=el.dataset.target;document.querySelectorAll(`.swatch[data-target="${tgt}"]`).forEach(s=>s.classList.remove('active'));el.classList.add('active');if(tgt==='primary')document.getElementById('primaryColour').value=el.dataset.col;if(tgt==='secondary')document.getElementById('secondaryColour').value=el.dataset.col;applyColours();}
 function applyColours(){const p=document.getElementById('primaryColour').value,s=document.getElementById('secondaryColour').value;document.documentElement.style.setProperty('--school-primary',p);document.documentElement.style.setProperty('--school-secondary',s);document.documentElement.style.setProperty('--accent',s);document.getElementById('displayTopBar').style.background=`linear-gradient(90deg,${p},${s})`;}
 function parseTimeInput(v){const[h,m]=v.split(':').map(Number);const d=new Date();d.setHours(h,m,0,0);return d;}
-function fmt12(date){let h=date.getHours(),m=date.getMinutes();const a=h>=12?'pm':'am';h=h%12||12;return`${h}:${String(m).padStart(2,'0')} ${a}`;}
+function fmt12(date){let h=date.getHours(),m=date.getMinutes(),s=date.getSeconds();const a=h>=12?'pm':'am';h=h%12||12;return`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} ${a}`;}
 function fmtMMSS(s){if(s<0)s=0;return`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;}
 
 async function launchDisplay(){
@@ -885,6 +886,10 @@ function tick(){
   const iMs=interviewDuration*60*1000;
   const tMs=enableTransition?transitionDuration*1000:0;
   const cycleMs=iMs+tMs;
+  const cycleMs=interviewDuration*60*1000;
+  let tMs=enableTransition?transitionDuration*1000:0;
+  if(tMs>=cycleMs) tMs=0;
+  const iMs=cycleMs-tMs;
   
   const idx=Math.floor(diffMs/cycleMs);
   const cycleOffset=diffMs%cycleMs;
