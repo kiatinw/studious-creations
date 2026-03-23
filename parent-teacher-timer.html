@@ -137,7 +137,7 @@ body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;min-
 /* ── TIME UP PULSE ── */
 @keyframes bgPulse {
   0% { background-color: var(--bg); }
-  20% { background-color: rgba(214,64,53,0.35); }
+  20% { background-color: #000000; }
   100% { background-color: var(--bg); }
 }
 .time-up-pulse { animation: bgPulse 1.4s ease-out; }
@@ -165,6 +165,18 @@ body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;min-
         </select>
         <input type="number" id="customLen" min="1" max="60" placeholder="Enter minutes" style="display:none;margin-top:.45rem;">
       </div>
+      <div class="field"><label>Transition Time</label>
+        <div class="toggle-row">
+          <label class="toggle-switch">
+            <input type="checkbox" id="transToggle" onchange="toggleTransInput()">
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+          <input type="number" id="transTime" min="5" max="300" value="30" placeholder="Secs" style="width:70px;height:32px;padding:0.2rem 0.5rem;display:none;">
+          <span class="toggle-label" id="transLabel" style="white-space:nowrap;">Off</span>
+        </div>
+      </div>
+    </div>
+    <div class="field-row">
       <div class="field"><label>Event Name</label><input type="text" id="eventName" value="Parent&ndash;Teacher Night"></div>
     </div>
     <div class="status-row"><div class="status-dot" id="statusDot"></div><span class="status-txt" id="statusTxt">Not started</span></div>
@@ -496,7 +508,7 @@ body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;min-
             <circle class="progress-ring-fill" id="ringFill"/>
           </svg>
           <div class="display-countdown" id="displayCountdown">5:00</div>
-          <div class="display-label">Time remaining in this interview</div>
+          <div class="display-label" id="displayLabel">Time remaining in this interview</div>
         </div>
       </div>
       <div class="display-session-panel">
@@ -764,9 +776,16 @@ function applyFont(){
   pl.style.fontFamily=f.family; pl.style.fontWeight=w;
   document.getElementById('boldLabel').textContent=bold?'On \u2014 heavy numerals':'Off \u2014 light numerals';
 }
+function toggleTransInput(){
+  const on=document.getElementById('transToggle').checked;
+  document.getElementById('transTime').style.display=on?'block':'none';
+  document.getElementById('transLabel').style.display=on?'none':'block';
+  if(on)document.getElementById('transTime').focus();
+}
 
 let wakeLock=null;
 let logoDataUrl=null,tickInterval=null,sessionStart=null,interviewDuration=5,lastInterviewIdx=-1;
+let enableTransition=false,transitionDuration=30,lastPhase='interview';
 
 function closeAttention() {
   document.getElementById('attentionOverlay').classList.add('hidden');
@@ -812,6 +831,8 @@ async function launchDisplay(){
   } else {
     interviewDuration=parseInt(lenSel.value);
   }
+  enableTransition=document.getElementById('transToggle').checked;
+  transitionDuration=parseInt(document.getElementById('transTime').value)||30;
   sessionStart=parseTimeInput(document.getElementById('startTime').value);
   document.getElementById('displaySchoolName').textContent=document.getElementById('schoolName').value.trim();
   document.getElementById('displayEventName').textContent=document.getElementById('eventName').value.trim();
@@ -833,6 +854,7 @@ function closeDisplay(){
   document.body.style.overflow='';
   if(tickInterval){clearInterval(tickInterval);tickInterval=null;}
   lastInterviewIdx=-1;
+  lastPhase='interview';
   updateStatus('idle');
   if(wakeLock){wakeLock.release().then(()=>{wakeLock=null;}).catch(()=>{});}
 }
@@ -859,28 +881,80 @@ function tick(){
   const diffMs=now-sessionStart;
   if(diffMs<0){showPrestart(now);updateStatus('waiting');return;}
   updateStatus('running'); showRunning();
-  const iMs=interviewDuration*60*1000,elapsed=diffMs%iMs,remainMs=iMs-elapsed;
-  const remainSec=Math.ceil(remainMs/1000),idx=Math.floor(diffMs/iMs);
-  if(idx!==lastInterviewIdx&&lastInterviewIdx!==-1){
-    playTone(document.getElementById('toneSelect').value);
-    const dv=document.getElementById('display-view');
-    dv.classList.remove('time-up-pulse');
-    void dv.offsetWidth; // trigger reflow
-    dv.classList.add('time-up-pulse');
+  
+  const iMs=interviewDuration*60*1000;
+  const tMs=enableTransition?transitionDuration*1000:0;
+  const cycleMs=iMs+tMs;
+  
+  const idx=Math.floor(diffMs/cycleMs);
+  const cycleOffset=diffMs%cycleMs;
+  const inInterview=cycleOffset<iMs;
+  const currentPhase=inInterview?'interview':'transition';
+  
+  let triggerTone=false;
+  
+  if(enableTransition){
+    // If transition enabled, ring when interview ends (transition starts)
+    if(lastPhase==='interview' && currentPhase==='transition'){
+      triggerTone=true;
+    }
+  } else {
+    // If no transition, ring when new cycle starts
+    if(idx!==lastInterviewIdx && lastInterviewIdx!==-1){
+      triggerTone=true;
+    }
   }
+  
+  if(triggerTone){
+     playTone(document.getElementById('toneSelect').value);
+     const dv=document.getElementById('display-view');
+     dv.classList.remove('time-up-pulse');
+     void dv.offsetWidth;
+     dv.classList.add('time-up-pulse');
+  }
+  
   lastInterviewIdx=idx;
+  lastPhase=currentPhase;
+  
+  // Display Logic
+  let remainMs, totalDurationMs;
+  if(inInterview){
+    remainMs=iMs-cycleOffset;
+    totalDurationMs=iMs;
+    document.getElementById('displayLabel').textContent="Time remaining in this interview";
+  } else {
+    remainMs=cycleMs-cycleOffset;
+    totalDurationMs=tMs;
+    document.getElementById('displayLabel').textContent="TRANSITION TIME";
+  }
+  
+  const remainSec=Math.ceil(remainMs/1000);
   document.getElementById('displayCountdown').textContent=fmtMMSS(remainSec);
   let tc,rc;
-  if(remainSec>60){tc='rgba(240,236,228,.92)';rc='rgba(240,236,228,.55)';}
-  else if(remainSec>30){tc='#e8a020';rc='#e8a020';}
-  else{tc='#d64035';rc='#d64035';}
+  if(!inInterview){
+    tc='#29b6f6'; rc='#29b6f6';
+    document.getElementById('displayLabel').style.color='#29b6f6';
+  } else {
+    document.getElementById('displayLabel').style.color='';
+    if(remainSec>60){tc='rgba(240,236,228,.92)';rc='rgba(240,236,228,.55)';}
+    else if(remainSec>30){tc='#e8a020';rc='#e8a020';}
+    else{tc='#d64035';rc='#d64035';}
+  }
+  
   document.getElementById('displayCountdown').style.color=tc;
   document.getElementById('ringFill').style.stroke=rc;
-  if(remainSec<=30){const i=.03+.05*(1-remainSec/30);document.getElementById('displayBgAccent').style.background=`radial-gradient(ellipse 70% 60% at 50% 50%,rgba(214,64,53,${i}),transparent)`;}
+  if(remainSec<=30){
+    const i=.03+.05*(1-remainSec/30);
+    const pulseCol = !inInterview ? '41, 182, 246' : '214, 64, 53';
+    document.getElementById('displayBgAccent').style.background=`radial-gradient(ellipse 70% 60% at 50% 50%,rgba(${pulseCol},${i}),transparent)`;
+  }
   else document.getElementById('displayBgAccent').style.background='none';
-  document.getElementById('ringFill').style.strokeDashoffset=ringCirc*(elapsed/iMs);
+  
+  const elapsedInPhase=totalDurationMs-remainMs;
+  document.getElementById('ringFill').style.strokeDashoffset=ringCirc*(elapsedInPhase/totalDurationMs);
+  
   document.getElementById('sessionInterviewNum').textContent=idx+1;
-  document.getElementById('sessionNextTime').textContent=fmt12(new Date(sessionStart.getTime()+(idx+1)*iMs));
+  document.getElementById('sessionNextTime').textContent=fmt12(new Date(sessionStart.getTime()+(idx+1)*cycleMs));
 }
 function showPrestart(now){
   document.getElementById('displayPrestart').classList.remove('hidden');
@@ -900,7 +974,9 @@ function saveSettings() {
     event: document.getElementById('eventName').value,
     pCol: document.getElementById('primaryColour').value,
     sCol: document.getElementById('secondaryColour').value,
-    attn: document.getElementById('attnToneSelect').value
+    attn: document.getElementById('attnToneSelect').value,
+    tEnabled: document.getElementById('transToggle').checked,
+    tTime: document.getElementById('transTime').value
   };
   localStorage.setItem('ptt_settings', JSON.stringify(s));
 }
@@ -913,13 +989,15 @@ function loadSettings() {
     if(s.pCol) document.getElementById('primaryColour').value = s.pCol;
     if(s.sCol) document.getElementById('secondaryColour').value = s.sCol;
     if(s.attn) document.getElementById('attnToneSelect').value = s.attn;
+    if(s.tEnabled!==undefined) document.getElementById('transToggle').checked = s.tEnabled;
+    if(s.tTime) document.getElementById('transTime').value = s.tTime;
   }
 }
 
 // Init
 loadSettings();
-applyColours(); applyFont(); toggleCustomLen();
-document.querySelectorAll('#schoolName, #eventName, #primaryColour, #secondaryColour, #attnToneSelect').forEach(el => el.addEventListener('input', saveSettings));
+applyColours(); applyFont(); toggleCustomLen(); toggleTransInput();
+document.querySelectorAll('#schoolName, #eventName, #primaryColour, #secondaryColour, #attnToneSelect, #transToggle, #transTime').forEach(el => el.addEventListener('input', saveSettings));
 </script>
 </body>
 </html>
