@@ -838,9 +838,7 @@ window.addEventListener('resize',resizeRing);
 function tick(){
   const now=new Date();
   document.getElementById('displayNow').textContent=fmt12(now);
-  const offsetMs=scheduleOffsetMins*60000;
-  const effectiveStart=new Date(sessionStart.getTime()+offsetMs);
-  const diffMs=now-effectiveStart;
+  const diffMs=now-sessionStart;
   if(diffMs<0){showPrestart(now);updateStatus('waiting');return;}
   updateStatus('running'); showRunning();
   const iMs=interviewDuration*60*1000,elapsed=diffMs%iMs,remainMs=iMs-elapsed;
