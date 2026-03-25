@@ -759,7 +759,7 @@ function autoAllocate(){
       candidates.slice(0,remaining).forEach(id=>{
         markerIds.push(id);
         workload[id].markingCount += markingLoadPerMarker;
-      }
+      });
     }
 
     state.allocs[course.id]={writerId, markerIds};
@@ -939,14 +939,6 @@ function renderTeacherView(){
     const marking=tasks.marking;
     const pct=Math.min(100,Math.round(tasks.load/maxLoad*100));
     const barCol=pct>80?'var(--red)':pct>55?'var(--amber)':'var(--green)';
-
-    const writingRows=writing.map(c=>{
-      const classes=c.classes.map(cl=>cl.name).join(', ');
-      return `<div class="task-row">
-        <span class="task-type task-type-write">Write</span>
-        <div class="task-detail">${esc(c.name)}<div class="task-classes">${classes||'No classes listed'}</div></div>
-      </div>`;
-    }).join('');
 
     // Marking rows — exclude courses they're writing (shown separately)
     const markingOnly=marking.filter(c=>!writing.find(w=>w.id===c.id));
