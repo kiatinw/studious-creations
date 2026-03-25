@@ -102,6 +102,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
 .course-drop-zone.collapsed .course-details-wrapper { display: none; }
 .collapse-toggle { font-size: 0.7rem; color: var(--accent); cursor: pointer; text-decoration: underline; background: none; border: none; padding: 0; }
 
+/* ── TASK ROWS ── */
+.task-alloc-row { display: grid; grid-template-columns: 80px 1fr 1.5fr 80px; gap: 1rem; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid var(--rule); }
+.task-alloc-row:last-child { border-bottom: none; }
+
 /* ── ALLOCATE VIEW TEACHER LIST ── */
 .teaching-list { font-size: 0.7rem; color: var(--dim); font-style: italic; margin-top: 0.2rem; }
 
@@ -135,6 +139,10 @@ tbody tr:hover td{background:var(--surface2);}
 .mc-btn{background:var(--surface2);border:1px solid var(--border);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;color:var(--ink2);transition:all .15s;}
 .mc-btn:hover{background:var(--border);}
 .mc-val{font-family:'DM Mono',monospace;font-size:.85rem;min-width:1.5rem;text-align:center;font-weight:500;}
+
+/* ── TASKS COUNT ── */
+.tasks-count{display:flex;align-items:center;gap:.4rem;}
+.tasks-count .mc-val{color:var(--ink);}
 
 /* ── DROP ZONE FEEDBACK ── */
 .course-drop-zone.drag-over{background:rgba(42, 82, 118, 0.05);border:2px dashed var(--accent)!important;}
@@ -375,7 +383,7 @@ let state = {
   teachers: [],
   courses:  [],
   allocs:   {},
-  unassignedClasses: [] // [{id, name, assignments:[{teacherId, periods}], collapsed: false}]
+  unassignedClasses: [] // [{id, name, assignments:[{teacherId, periods}]}]
 };
 let selectedClassIds = new Set();
 let _id = 1;
@@ -387,13 +395,13 @@ function loadDefaultCourses() {
     { name: 'Year 8 Mathematics', markers: 2 },
     { name: 'Year 9 Mathematics', markers: 2 },
     { name: 'Year 10 Mathematics', markers: 2 },
-    { name: 'Year 11 Mathematics Advanced', markers: 2 }, { name: 'Year 11 Mathematics Standard 2', markers: 2 }, 
-    { name: 'Year 12 Mathematics Extension 1', markers: 3 }, { name: 'Year 12 Mathematics Advanced', markers: 2 },
+    { name: 'Year 11 Mathematics Advanced', markers: 2 }, { name: 'Year 11 Mathematics Extension', markers: 2 }, { name: 'Year 11 Mathematics Standard', markers: 2 }, 
+     { name: 'Year 12 Mathematics Advanced', markers: 2 }, { name: 'Year 12 Mathematics Extension 1', markers: 2 }, { name: 'Year 12 Mathematics Extension 2', markers: 2 }, { name: 'Year 12 Mathematics Standard 1', markers: 2 }, { name: 'Year 12 Mathematics Standard 2', markers: 2 },
   ];
 
   if (state.courses.length === 0 && state.teachers.length === 0) { // Only load if state is empty
     defaultCourses.forEach(c => {
-      state.courses.push({ id: uid(), name: c.name, markersNeeded: c.markers, allTeachersMark: false, classes: [], collapsed: false });
+      state.courses.push({ id: uid(), name: c.name, markersNeeded: c.markers, tasksPerYear: 4, allTeachersMark: false, classes: [], collapsed: false });
     });
   }
 }
@@ -473,8 +481,18 @@ function addCourse(){
   const name=nameInp.value.trim();
   if(!name) return;
   const markersNeeded=Math.max(1,parseInt(markInp.value)||2);
-  state.courses.push({id:uid(), name, markersNeeded, classes:[], collapsed: false });
+  state.courses.push({id:uid(), name, markersNeeded, tasksPerYear: 4, classes:[], collapsed: false });
   nameInp.value='';
+  renderCourses(); renderCourseClassArea(); renderAllocTable();
+}
+function updateTasksPerYear(courseId, delta){
+  const c=state.courses.find(c=>c.id===courseId);
+  if(!c)return;
+  c.tasksPerYear=Math.max(1,c.tasksPerYear+delta);
+  // Trim allocations if tasks reduced
+  if(state.allocs[courseId]) state.allocs[courseId] = state.allocs[courseId].slice(0, c.tasksPerYear);
+  // No direct impact on allocations, just a planning metric
+  renderCourseClassArea();
   renderCourses(); renderCourseClassArea(); renderAllocTable();
 }
 function removeCourse(id){
@@ -512,7 +530,11 @@ function renderCourses(){
         <button class="btn-icon" style="padding:0; height:14px; font-size:0.6rem; visibility:${i === state.courses.length - 1 ? 'hidden' : 'visible'}" onclick="moveCourse('${c.id}', 1)" title="Move Down">▼</button>
       </div>
       <span class="list-item-name">${esc(c.name)}</span>
-      <span class="list-item-meta">${c.classes.length} class${c.classes.length!==1?'es':''} · ${c.markersNeeded} marker${c.markersNeeded!==1?'s':''}</span>
+      <span class="list-item-meta">
+        ${c.classes.length} class${c.classes.length!==1?'es':''} · 
+        ${c.markersNeeded} marker${c.markersNeeded!==1?'s':''} ·
+        ${c.tasksPerYear} task${c.tasksPerYear!==1?'s':''}
+      </span>
       <button class="btn btn-danger" onclick="removeCourse('${c.id}')">Remove</button>
     </div>`).join('');
 }
@@ -544,6 +566,12 @@ function renderCourseClassArea(){
           <button class="mc-btn" onclick="updateMarkersNeeded('${c.id}',-1)">−</button>
           <span class="mc-val">${c.markersNeeded}</span>
           <button class="mc-btn" onclick="updateMarkersNeeded('${c.id}',1)">+</button>
+        </div>
+        <div class="tasks-count" title="Tasks per year for this course">
+          <span style="font-size:.68rem;color:var(--dim);letter-spacing:.08em;text-transform:uppercase;">Tasks:</span>
+          <button class="mc-btn" onclick="updateTasksPerYear('${c.id}',-1)">−</button>
+          <span class="mc-val">${c.tasksPerYear}</span>
+          <button class="mc-btn" onclick="updateTasksPerYear('${c.id}',1)">+</button>
         </div>
         <button class="collapse-toggle" style="pointer-events: auto;" onclick="toggleCourseCollapse('${c.id}')">${c.collapsed ? 'Expand' : 'Collapse'}</button>
       </div>
@@ -746,80 +774,82 @@ function autoAllocate(){
   state.teachers.forEach(t => { workload[t.id] = { writingCount: 0, markingCount: 0 }; });
   
   // Calculate total teaching load for everyone
-  state.teachers.forEach(t => {
-    let sum = 0;
-    state.courses.forEach(c => c.classes.forEach(cl => cl.assignments.forEach(a => {
-      if(a.teacherId === t.id) sum += a.periods;
-    })));
-    totalTeachingLoad[t.id] = sum;
-  });
+  state.teachers.forEach(t => { totalTeachingLoad[t.id] = getTeacherTeachingLoad(t.id); });
 
   function calculateTotalLoad(id) {
     const w = workload[id];
     return (w.writingCount * WRITING_WEIGHT) + w.markingCount;
   }
 
-  state.courses.forEach(course=>{
-    const involvement = {};
-    course.classes.forEach(cl => {
-      cl.assignments.forEach(a => {
-        involvement[a.teacherId] = (involvement[a.teacherId] || 0) + a.periods;
+  state.allocs = {};
+  const maxTasks = Math.max(...state.courses.map(c => c.tasksPerYear), 0);
+
+  // Interleave allocation by task index to balance across the whole year
+  for (let tIdx = 0; tIdx < maxTasks; tIdx++) {
+    state.courses.forEach(course => {
+      if (tIdx >= course.tasksPerYear) return;
+      if (!state.allocs[course.id]) state.allocs[course.id] = [];
+
+      const involvement = {};
+      course.classes.forEach(cl => {
+        cl.assignments.forEach(a => { involvement[a.teacherId] = (involvement[a.teacherId] || 0) + a.periods; });
       });
+      const eligibleIds = Object.keys(involvement);
+      if (eligibleIds.length === 0) return;
+
+      const sortByLoad = (ids, prioritzeInvolvement = false) => {
+        return [...ids].sort((a,b) => {
+          if (prioritzeInvolvement) {
+            const diff = (involvement[b] || 0) - (involvement[a] || 0);
+            if (diff !== 0) return diff;
+          }
+          const loadA = calculateTotalLoad(a);
+          const loadB = calculateTotalLoad(b);
+          if (loadA !== loadB) return loadA - loadB;
+          return totalTeachingLoad[b] - totalTeachingLoad[a];
+        });
+      };
+
+      // Pick writer
+      const writerPool = sortByLoad(eligibleIds, true);
+      const writerId = writerPool[0] || null;
+      if (writerId) workload[writerId].writingCount += 1;
+
+      // Pick markers
+      const needed = course.markersNeeded;
+      const markerIds = writerId ? [writerId] : [];
+      const markingLoadPerMarker = (course.classes.length * MARKING_WEIGHT_PER_CLASS) / needed;
+      if (writerId) workload[writerId].markingCount += markingLoadPerMarker;
+
+      const remaining = needed - markerIds.length;
+      if (remaining > 0) {
+        const candidates = sortByLoad(eligibleIds.filter(id => !markerIds.includes(id)));
+        candidates.slice(0, remaining).forEach(id => {
+          markerIds.push(id);
+          workload[id].markingCount += markingLoadPerMarker;
+        });
+      }
+
+      state.allocs[course.id][tIdx] = { writerId, markerIds };
     });
-    const eligibleIds = Object.keys(involvement);
-    const allIds=state.teachers.map(t=>t.id);
-
-    function sortByLoad(ids, prioritzeInvolvement = false){
-      return [...ids].sort((a,b)=>{
-        if (prioritzeInvolvement) {
-          const diff = (involvement[b] || 0) - (involvement[a] || 0);
-          if (diff !== 0) return diff;
-        }
-        const loadA = calculateTotalLoad(a);
-        const loadB = calculateTotalLoad(b);
-        if (loadA !== loadB) return loadA - loadB;
-        return totalTeachingLoad[b] - totalTeachingLoad[a];
-      });
-    }
-
-    // Strictly allocate teachers teaching the course
-    if (eligibleIds.length === 0) return; 
-
-    // Pick writer from eligible (prefer those with more periods in THIS course)
-    const writerPool=sortByLoad(eligibleIds, true);
-    const writerId=writerPool[0]||null;
-    if(writerId) workload[writerId].writingCount += 1;
-
-    // Pick markers: writer always marks; fill remaining from eligible then all
-    const needed=course.markersNeeded;
-    const markerIds=writerId?[writerId]:[];
-    const markingLoadPerMarker = (course.classes.length * MARKING_WEIGHT_PER_CLASS) / needed;
-    if(writerId) workload[writerId].markingCount += markingLoadPerMarker;
-
-    // Remaining slots
-    const remaining=needed-markerIds.length;
-    if(remaining>0){
-      const candidates = sortByLoad(eligibleIds.filter(id => !markerIds.includes(id)));
-      candidates.slice(0,remaining).forEach(id=>{
-        markerIds.push(id);
-        workload[id].markingCount += markingLoadPerMarker;
-      });
-    }
-
-    state.allocs[course.id]={writerId, markerIds};
-  });
+  }
 
   showPage('allocate');
-  renderCourseView();
-  renderTeacherView();
-  renderAllocTable();
 }
 
 function clearAllAllocations() {
-    if (confirm("Are you sure you want to clear ALL writers and markers?")) {
+    if (confirm("Are you sure you want to clear ALL writers and markers for the whole year?")) {
         state.allocs = {};
         renderAllocTable(); renderCourseView(); renderTeacherView();
     }
+}
+
+function getTeacherTeachingLoad(teacherId) {
+    let sum = 0;
+    state.courses.forEach(c => c.classes.forEach(cl => cl.assignments.forEach(a => {
+      if(a.teacherId === teacherId) sum += a.periods;
+    })));
+    return sum;
 }
 
 // ═══════════════════════════════════════════
@@ -827,88 +857,78 @@ function clearAllAllocations() {
 // ═══════════════════════════════════════════
 function renderAllocTable(){
   const el=document.getElementById('alloc-table-wrap');
-  if(!state.courses.length){
-    el.innerHTML='<div class="list-empty">Add courses, classes, and teachers in Setup, then click Auto-Allocate.</div>';
-    return;
-  }
+  if(!state.courses.length){ el.innerHTML='<div class="list-empty">Add courses in Setup first.</div>'; return; }
 
-  const rows = state.courses.map(course => {
-    const a=state.allocs[course.id]||{writerId:null,markerIds:[]};
-    const classNames=course.classes.map(cl=>cl.name).join(', ')||'<span style="color:var(--dim)">None</span>';
-    const courseTeachers = getTeachersForCourse(course).map(id => {
-        const t = state.teachers.find(te => te.id === id);
-        return t ? t.name : 'Unknown';
-    }).join(', ');
+  el.innerHTML = state.courses.map(course => {
+    const tasks = state.allocs[course.id] || [];
+    const courseTeachers = getTeachersForCourse(course).map(id => state.teachers.find(t => t.id === id)?.name).filter(Boolean).join(', ');
+    
+    let taskHtml = '';
+    for (let tIdx = 0; tIdx < course.tasksPerYear; tIdx++) {
+        const a = tasks[tIdx] || { writerId: null, markerIds: [] };
+        const writerOpts = `<option value="">— unassigned —</option>${state.teachers.map(t => `<option value="${t.id}"${a.writerId === t.id ? ' selected' : ''}>${esc(t.name)}</option>`).join('')}`;
+        
+        const markerInputs = Array.from({ length: course.markersNeeded }, (_, mIdx) => {
+            const mid = a.markerIds[mIdx] || '';
+            const markerOpts = `<option value="">— unassigned —</option>${state.teachers.map(t => `<option value="${t.id}"${mid === t.id ? ' selected' : ''}>${esc(t.name)}${a.writerId === t.id ? ' ✎' : ''}</option>`).join('')}`;
+            return `<select class="alloc-select" style="flex:1; margin-bottom:2px;" onchange="setMarker('${course.id}',${tIdx},${mIdx},this.value)">${markerOpts}</select>`;
+        }).join('');
 
-    const writerOpts=`<option value="">— unassigned —</option>${state.teachers.map(t=>`<option value="${t.id}"${a.writerId===t.id?' selected':''}>${esc(t.name)}</option>`).join('')}`;
+        taskHtml += `
+            <div class="task-alloc-row">
+                <div style="font-size:0.7rem; font-weight:700; color:var(--accent);">Task ${tIdx + 1}</div>
+                <div><select class="alloc-select" style="width:100%" onchange="setWriter('${course.id}',${tIdx},this.value)">${writerOpts}</select></div>
+                <div style="display:flex; flex-direction:column;">${markerInputs}</div>
+                <div style="text-align:right;">${checkAllocStatus(course, a)}</div>
+            </div>`;
+    }
 
-    // Marker rows — one per needed slot
-    const markerRows=Array.from({length:course.markersNeeded},(_, i)=>{
-      const mid=a.markerIds[i]||'';
-      const markerOpts=`<option value="">— unassigned —</option>${state.teachers.map(t=>`<option value="${t.id}"${mid===t.id?' selected':''}>${esc(t.name)}${a.writerId===t.id?' ✎':''}</option>`).join('')}`;
-      return `<div style="margin-bottom:.3rem;display:flex;align-items:center;gap:.4rem;">
-        <span style="font-size:.6rem;color:var(--dim);min-width:3rem;letter-spacing:.06em;text-transform:uppercase;">Marker ${i+1}</span>
-        <select class="alloc-select" style="flex:1" onchange="setMarker('${course.id}',${i},this.value)">${markerOpts}</select>
-      </div>`;
-    }).join('');
-
-    const status = checkAllocStatus(course, a);
-
-    return `<div class="card" style="margin-bottom:.9rem;">
-      <div style="display:flex;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
-        <div style="flex:2;min-width:200px;">
-          <div class="td-course">${esc(course.name)}</div>
-          <div class="td-sub" style="margin-top:.25rem;">${classNames}</div>
-          ${courseTeachers ? `<div class="teaching-list">Teachers: ${esc(courseTeachers)}</div>` : ''}
-        </div>
-        <div style="flex:1;min-width:180px;">
-          <div style="font-size:.6rem;color:var(--dim);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.35rem;">Writer</div>
-          <select class="alloc-select" style="width:100%" onchange="setWriter('${course.id}',this.value)">${writerOpts}</select>
-        </div>
-        <div style="flex:1;min-width:180px;">
-          <div style="font-size:.6rem;color:var(--dim);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.35rem;">Markers (${course.markersNeeded})</div>
-          ${markerRows}
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem;min-width:80px;">
-          ${status}
-          <div class="marker-count" title="Change markers needed">
-            <button class="mc-btn" onclick="updateMarkersNeeded('${course.id}',-1);renderAllocTable();">−</button>
-            <span class="mc-val">${course.markersNeeded}</span>
-            <button class="mc-btn" onclick="updateMarkersNeeded('${course.id}',1);renderAllocTable();">+</button>
-          </div>
-        </div>
-      </div>
-    </div>`;
+    return `
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:1rem; border-bottom:1px solid var(--rule); padding-bottom:0.5rem;">
+                <div>
+                    <div class="td-course">${esc(course.name)}</div>
+                    <div class="teaching-list">Teaching Load: ${esc(courseTeachers || 'None')}</div>
+                </div>
+                <div class="marker-count">
+                    <span style="font-size:0.6rem; color:var(--dim);">Markers Needed:</span>
+                    <button class="mc-btn" onclick="updateMarkersNeeded('${course.id}',-1);renderAllocTable();">−</button>
+                    <span class="mc-val">${course.markersNeeded}</span>
+                    <button class="mc-btn" onclick="updateMarkersNeeded('${course.id}',1);renderAllocTable();">+</button>
+                </div>
+            </div>
+            ${taskHtml}
+        </div>`;
   }).join('');
-
-  el.innerHTML=rows;
 }
 
 function checkAllocStatus(course, a){
   if(!a||!a.writerId) return '<span class="chip chip-err">No writer</span>';
   const filled=a.markerIds.filter(Boolean).length;
   if(filled<course.markersNeeded) return '<span class="chip chip-warn">'+filled+'/'+course.markersNeeded+' markers</span>';
-  return '<span class="chip chip-ok">&#10003; Complete</span>';
+  return '<span class="chip chip-ok">&#10003;</span>';
 }
 
-function setWriter(courseId, teacherId){
-  if(!state.allocs[courseId]) state.allocs[courseId]={writerId:null,markerIds:[]};
-  state.allocs[courseId].writerId=teacherId||null;
+function setWriter(courseId, taskIdx, teacherId){
+  if(!state.allocs[courseId]) state.allocs[courseId]=[];
+  if(!state.allocs[courseId][taskIdx]) state.allocs[courseId][taskIdx]={writerId:null,markerIds:[]};
+  state.allocs[courseId][taskIdx].writerId=teacherId||null;
   // Ensure writer is also a marker
-  if(teacherId&&!state.allocs[courseId].markerIds.includes(teacherId)){
-    state.allocs[courseId].markerIds=[teacherId,...state.allocs[courseId].markerIds.filter(Boolean)];
+  if(teacherId&&!state.allocs[courseId][taskIdx].markerIds.includes(teacherId)){
+    state.allocs[courseId][taskIdx].markerIds=[teacherId,...state.allocs[courseId][taskIdx].markerIds.filter(Boolean)];
     const c = state.courses.find(c => c.id === courseId);
     if (c) {
-      state.allocs[courseId].markerIds = state.allocs[courseId].markerIds.slice(0, c.markersNeeded);
+      state.allocs[courseId][taskIdx].markerIds = state.allocs[courseId][taskIdx].markerIds.slice(0, c.markersNeeded);
     }
   }
   renderAllocTable(); renderCourseView(); renderTeacherView();
 }
-function setMarker(courseId, idx, teacherId){
-  if(!state.allocs[courseId]) state.allocs[courseId]={writerId:null,markerIds:[]};
+function setMarker(courseId, taskIdx, mIdx, teacherId){
+  if(!state.allocs[courseId]) state.allocs[courseId]=[];
+  if(!state.allocs[courseId][taskIdx]) state.allocs[courseId][taskIdx]={writerId:null,markerIds:[]};
   const c=state.courses.find(c=>c.id===courseId);
-  while(state.allocs[courseId].markerIds.length<=idx) state.allocs[courseId].markerIds.push('');
-  state.allocs[courseId].markerIds[idx]=teacherId||'';
+  while(state.allocs[courseId][taskIdx].markerIds.length <= mIdx) state.allocs[courseId][taskIdx].markerIds.push('');
+  state.allocs[courseId][taskIdx].markerIds[mIdx]=teacherId||'';
   renderCourseView(); renderTeacherView();
 }
 
@@ -918,25 +938,27 @@ function setMarker(courseId, idx, teacherId){
 function renderCourseView(){
   const tbody=document.getElementById('course-view-body');
   if(!state.courses.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--dim);padding:2rem;">No courses set up.</td></tr>';return;}
-  tbody.innerHTML=state.courses.map(course=>{
-    const a=state.allocs[course.id]||{writerId:null,markerIds:[]};
-    const writer=state.teachers.find(t=>t.id===a.writerId);
-    const markers=a.markerIds.filter(Boolean).map(id=>state.teachers.find(t=>t.id===id)).filter(Boolean);
-    const classStr = course.classes.map(cl => {
-      const teacherPills = cl.assignments.map(asgn => {
-        const teacher = state.teachers.find(t => t.id === asgn.teacherId);
-        return teacher ? `${esc(teacher.name)} (${asgn.periods}p)` : `Unassigned (${asgn.periods}p)`;
-      }).join(', ');
-      return `<span class="pill pill-class" style="margin:.1rem">${esc(cl.name)} <span style="opacity:.6;margin:0 .15rem;">·</span> ${teacherPills || 'No teachers'}</span>`;
-    }).join(' ');
+  
+  tbody.innerHTML = state.courses.flatMap(course => {
+    const tasks = state.allocs[course.id] || [];
+    const classStr = course.classes.map(cl => `<span class="pill pill-class">${esc(cl.name)}</span>`).join(' ');
 
-    return `<tr>
-      <td><div class="td-course">${esc(course.name)}</div><div class="td-sub">${course.markersNeeded} marker${course.markersNeeded!==1?'s':''} needed</div></td>
-      <td><div class="pills-wrap">${classStr||'<span style="color:var(--dim)">—</span>'}</div></td>
-      <td>${writer?`<span class="pill pill-writer">&#9998; ${esc(writer.name)}</span>`:'<span class="chip chip-err">Unassigned</span>'}</td>
-      <td><div class="pills-wrap">${markers.length?markers.map(m=>`<span class="pill pill-marker">&#10003; ${esc(m.name)}</span>`).join(''):'<span class="chip chip-warn">None</span>'}</div></td>
-      <td>${checkAllocStatus(course,a)}</td>
-    </tr>`;
+    return Array.from({length: course.tasksPerYear}, (_, tIdx) => {
+        const a = tasks[tIdx] || { writerId: null, markerIds: [] };
+        const writer = state.teachers.find(t => t.id === a.writerId);
+        const markers = a.markerIds.filter(Boolean).map(id => state.teachers.find(t => t.id === id)).filter(Boolean);
+        
+        return `<tr>
+          <td>
+            ${tIdx === 0 ? `<div class="td-course">${esc(course.name)}</div>` : ''}
+            <div class="td-sub">Task ${tIdx + 1}</div>
+          </td>
+          <td>${tIdx === 0 ? `<div class="pills-wrap">${classStr || '—'}</div>` : ''}</td>
+          <td>${writer ? `<span class="pill pill-writer">&#9998; ${esc(writer.name)}</span>` : '<span class="chip chip-err">Unassigned</span>'}</td>
+          <td><div class="pills-wrap">${markers.length ? markers.map(m => `<span class="pill pill-marker">&#10003; ${esc(m.name)}</span>`).join('') : '<span class="chip chip-warn">None</span>'}</div></td>
+          <td>${checkAllocStatus(course, a)}</td>
+        </tr>`;
+    });
   }).join('');
 }
 
@@ -953,33 +975,22 @@ function renderTeacherView(){
   
   state.teachers.forEach(t => { 
     workload[t.id] = { writing: [], marking: [], load: 0 }; 
-    let tSum = 0;
-    state.courses.forEach(c => c.classes.forEach(cl => cl.assignments.forEach(a => {
-      if(a.teacherId === t.id) tSum += a.periods;
-    })));
-    teachingLoads[t.id] = tSum;
+    teachingLoads[t.id] = getTeacherTeachingLoad(t.id);
   });
 
-  state.courses.forEach(course=>{
-    const a=state.allocs[course.id];
-    if(!a)return;
-    let markersCount = course.markersNeeded;
-    if (course.allTeachersMark) {
-        const teachersOnCourse = getTeachersForCourse(course);
-        if (teachersOnCourse.length > 0) {
-            markersCount = teachersOnCourse.length;
+  state.courses.forEach(course => {
+    const tasks = state.allocs[course.id];
+    if(!tasks || !Array.isArray(tasks)) return;
+    
+    tasks.forEach(a => {
+        const markingLoadPerMarker = (course.classes.length * MARKING_WEIGHT_PER_CLASS) / Math.max(1, course.markersNeeded);
+        if(a.writerId && workload[a.writerId]) {
+          workload[a.writerId].writing.push(course);
+          workload[a.writerId].load += WRITING_WEIGHT;
         }
-    }
-    const markingLoadPerMarker = (course.classes.length * MARKING_WEIGHT_PER_CLASS) / Math.max(1, markersCount);
-    if(a.writerId&&workload[a.writerId]) {
-      workload[a.writerId].writing.push(course);
-      workload[a.writerId].load += WRITING_WEIGHT;
-    }
-    a.markerIds.filter(Boolean).forEach(mid=>{
-      if(workload[mid]) {
-        workload[mid].marking.push(course);
-        workload[mid].load += markingLoadPerMarker;
-      }
+        a.markerIds.filter(Boolean).forEach(mid => {
+          if(workload[mid]) { workload[mid].marking.push(course); workload[mid].load += markingLoadPerMarker; }
+        });
     });
   });
 
@@ -1053,7 +1064,7 @@ function parseCSV(text) {
 }
 
 function downloadCSVTemplate() {
-  const csv = "course_name,class_code,first_name,surname,periods,markers_needed\nYear 12 Advanced,12MAA1,John,Smith,5,2\nYear 11 Standard,11MST2,Alice,Jones,3,3\nYear 11 Standard,11MST2,Bob,Davis,2,3";
+  const csv = "course_name,class_code,first_name,surname,periods,markers_needed,tasks_per_year\nYear 12 Advanced,12MAA1,John,Smith,5,2,4\nYear 11 Standard,11MST2,Alice,Jones,3,3,4\nYear 11 Standard,11MST2,Bob,Davis,2,3,4";
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
   a.download='allocator_template.csv';
@@ -1061,18 +1072,18 @@ function downloadCSVTemplate() {
 }
 
 function exportToCSV() {
-  let csv = 'course_name,class_name,teacher_name,periods,markers_needed\n';
+  let csv = 'course_name,class_name,teacher_name,periods,markers_needed,tasks_per_year\n';
   state.courses.forEach(c => {
     if (c.classes.length === 0) {
-      csv += `${c.name},,,${c.markersNeeded}\n`;
+      csv += `${c.name},,,${c.markersNeeded},${c.tasksPerYear}\n`;
     } else {
       c.classes.forEach(cl => {
         if (cl.assignments.length === 0) {
-          csv += `${c.name},${cl.name},,,${c.markersNeeded}\n`;
+          csv += `${c.name},${cl.name},,,${c.markersNeeded},${c.tasksPerYear}\n`;
         } else {
           cl.assignments.forEach(a => {
             const teacher = state.teachers.find(t => t.id === a.teacherId);
-            csv += `${c.name},${cl.name},${teacher?.name || ''},${a.periods},${c.markersNeeded}\n`;
+            csv += `${c.name},${cl.name},${teacher?.name || ''},${a.periods},${c.markersNeeded},${c.tasksPerYear}\n`;
           });
         }
       });
@@ -1161,7 +1172,9 @@ function processImportedData(text) {
 
       // Get or create course
       const courseId = courseName ? courseMap[courseName] : null;
-      const course = courseId ? state.courses.find(c => c.id === courseId) : null;
+      let course = courseId ? state.courses.find(c => c.id === courseId) : null;
+      // If course doesn't exist, create it with default tasksPerYear
+      if (!course && courseName) { course = { id: uid(), name: courseName, markersNeeded: parseInt(getVal(['markers_needed', 'markers']) || 2, 10), tasksPerYear: parseInt(getVal(['tasks_per_year', 'tasks']) || 4, 10), allTeachersMark: false, classes: [], collapsed: false }; state.courses.push(course); courseMap[courseName] = course.id; }
 
       // Get or create class and assign teacher
       if (className) {
