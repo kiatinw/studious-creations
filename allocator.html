@@ -240,6 +240,10 @@ tbody tr:hover td{background:var(--surface2);}
     <div class="card-title">Save &amp; Load</div>
     <p style="font-size:.8rem;color:var(--dim);margin-bottom:.9rem;">Import data from a CSV file or by pasting directly from a spreadsheet.</p>
     <div class="data-actions">
+      <div style="width:100%;margin-bottom:0.8rem;display:flex;align-items:center;gap:0.8rem;">
+         <label style="font-size:0.8rem;font-weight:600;color:var(--dim);">Faculty Code Filter:</label>
+         <input type="text" id="faculty-code" placeholder="e.g. M (filters class codes starting with M)" style="max-width:260px;">
+      </div>
       <button class="btn btn-secondary btn-sm" onclick="showImportHelp()">? Import Help</button>
       <button class="btn btn-secondary btn-sm" onclick="downloadCSVTemplate()">&#8659; Download CSV Template</button>
       <label class="btn btn-primary btn-sm" style="cursor:pointer;">&#8657; Import from CSV <input type="file" accept=".csv" style="display:none" onchange="importFromCSV(event)"></label>
@@ -250,7 +254,7 @@ tbody tr:hover td{background:var(--surface2);}
             <strong>Or, paste from a spreadsheet:</strong>
         </label>
         <p style="font-size:.8rem;color:var(--dim);margin-bottom:.7rem;">
-          Copy columns from Excel/Sheets (<b>course_name, class_name, teacher_name, periods, markers_needed</b>) and paste below.
+          Copy columns (<b>course_name, class_code, first_name, surname, periods, markers_needed</b>) from Excel/Sheets and paste below.
         </p>
         <textarea id="paste-area" placeholder="Paste data here..." style="width:100%; min-height: 100px; font-family:var(--font-body); font-size: .8rem;"></textarea>
         <button class="btn btn-primary btn-sm" style="margin-top:.5rem;" onclick="importFromPaste()">Import from Paste</button>
@@ -315,13 +319,13 @@ tbody tr:hover td{background:var(--surface2);}
       This tool can import your faculty's structure from a CSV file or by pasting data from a spreadsheet (like Excel or Google Sheets). This is the fastest way to get set up.
     </p>
     <p>
-      <strong>From Sentral:</strong> You can often generate a report of all classes for your faculty. Look for an option to export this as a CSV or copy it to Excel. The key is to get a list with at least these three columns: <strong>Course Name</strong>, <strong>Class Code</strong>, and <strong>Teacher Name</strong>.
+      <strong>From Sentral:</strong> You can often generate a report of all classes for your faculty. Look for an option to export this as a CSV or copy it to Excel. The key is to get a list with columns for <strong>Course Name</strong>, <strong>Class Code</strong>, and the teacher's <strong>First Name</strong> and <strong>Surname</strong>.
     </p>
     <p>The import requires the following columns with these exact headers:</p>
     <ul>
       <li><code>course_name</code></li>
-      <li><code>class_name</code></li>
-      <li><code>teacher_name</code></li>
+      <li><code>class_name</code> (or <code>class_code</code>)</li>
+      <li><code>first_name</code> & <code>surname</code> (or a single <code>teacher_name</code> column)</li>
       <li><code>periods</code> (optional, defaults to 5)</li>
       <li><code>markers_needed</code> (optional, defaults to 2)</li>
     </ul>
@@ -357,6 +361,16 @@ function loadDefaultCourses() {
       state.courses.push({ id: uid(), name: c.name, markersNeeded: c.markers, allTeachersMark: false, classes: [] });
     });
   }
+}
+
+function getTeachersForCourse(course) {
+    const teacherIds = new Set();
+    course.classes.forEach(cl => {
+        cl.assignments.forEach(a => {
+            teacherIds.add(a.teacherId);
+        });
+    });
+    return Array.from(teacherIds);
 }
 
 const WRITING_WEIGHT = 1.5;
@@ -840,7 +854,7 @@ function parseCSV(text) {
 }
 
 function downloadCSVTemplate() {
-  const csv = "course_name,class_name,teacher_name,periods,markers_needed\nYear 12 Advanced,12MAA1,J. Smith,5,2\nYear 11 Standard,11MST2,A. Jones,3,3\nYear 11 Standard,11MST2,B. Davis,2,3";
+  const csv = "course_name,class_code,first_name,surname,periods,markers_needed\nYear 12 Advanced,12MAA1,John,Smith,5,2\nYear 11 Standard,11MST2,Alice,Jones,3,3\nYear 11 Standard,11MST2,Bob,Davis,2,3";
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
   a.download='allocator_template.csv';
@@ -892,36 +906,68 @@ function importFromCSV(e){
 
 function processImportedData(text) {
   try{
+    const fcEl = document.getElementById('faculty-code');
+    const facultyCode = fcEl ? fcEl.value.trim().toUpperCase() : '';
     const data = parseCSV(text);
     state = { teachers: [], courses: [], allocs: {} };
     _id = 1;
     const teacherMap = {}, courseMap = {};
 
     data.forEach(row => {
-      if (!row.teacher_name && !row.course_name) return;
+      // Helper to match column names case-insensitively
+      const getVal = (keys) => {
+        for (const k of keys) {
+          const found = Object.keys(row).find(rk => rk.toLowerCase() === k.toLowerCase());
+          if (found && row[found]) return row[found].trim();
+        }
+        return '';
+      };
+
+      const className = getVal(['class_name', 'class_code', 'class']);
+      const courseName = getVal(['course_name', 'course', 'subject']);
+      
+      // Filter by faculty code if provided
+      if (facultyCode && className && !className.toUpperCase().startsWith(facultyCode)) return;
+
+      // Teacher Name
+      let teacherName = getVal(['teacher_name', 'teacher']);
+      if (!teacherName) {
+        const first = getVal(['first_name', 'first', 'firstname']);
+        const last = getVal(['surname', 'last_name', 'lastname']);
+        if (first || last) teacherName = `${first} ${last}`.trim();
+      }
+
+      if (!teacherName && !courseName) return;
+
       let teacherId = null;
-      if (row.teacher_name && !teacherMap[row.teacher_name]) {
-        teacherId = uid();
-        teacherMap[row.teacher_name] = teacherId;
-        state.teachers.push({ id: teacherId, name: row.teacher_name });
+      if (teacherName) {
+        if (!teacherMap[teacherName]) {
+          teacherId = uid();
+          teacherMap[teacherName] = teacherId;
+          state.teachers.push({ id: teacherId, name: teacherName });
+        }
+        teacherId = teacherMap[teacherName];
       }
-      teacherId = teacherMap[row.teacher_name];
 
-      if (row.course_name && !courseMap[row.course_name]) {
-        const courseId = uid();
-        courseMap[row.course_name] = courseId;
-        state.courses.push({ id: courseId, name: row.course_name, markersNeeded: parseInt(row.markers_needed, 10) || 2, classes: [] });
+      if (courseName) {
+        if (!courseMap[courseName]) {
+          const courseId = uid();
+          courseMap[courseName] = courseId;
+          const markers = parseInt(getVal(['markers_needed', 'markers']) || 2, 10);
+          state.courses.push({ id: courseId, name: courseName, markersNeeded: markers, allTeachersMark: false, classes: [] });
+        }
       }
-      const course = state.courses.find(c => c.name === row.course_name);
+      const course = state.courses.find(c => c.name === courseName);
 
-      if (row.class_name && course) {
-        let cls = course.classes.find(cl => cl.name === row.class_name);
+      if (className && course) {
+        let cls = course.classes.find(cl => cl.name === className);
         if (!cls) {
-          cls = { id: uid(), name: row.class_name, assignments: [] };
+          cls = { id: uid(), name: className, assignments: [] };
           course.classes.push(cls);
         }
         if (teacherId && !cls.assignments.some(a => a.teacherId === teacherId)) {
-          cls.assignments.push({ teacherId, periods: parseInt(row.periods, 10) || 5 });
+          const periods = parseInt(getVal(['periods', 'load']) || 5, 10);
+          cls.assignments.push({ teacherId, periods });
         }
       }
     });
