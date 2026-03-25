@@ -230,6 +230,11 @@ tbody tr:hover td{background:var(--surface2);}
   <div class="card" id="class-assignment-card">
     <div class="card-title">Assign Classes to Courses</div>
     <p style="font-size:.8rem;color:var(--dim);margin-bottom:1.2rem;">For each course, add class groups and assign teachers with their period load.</p>
+    <div id="unassigned-wrapper" class="unassigned-section">
+        <div style="font-size:0.75rem;font-weight:700;color:var(--amber);margin-bottom:0.8rem;text-transform:uppercase;letter-spacing:0.05em;">Unmapped Classes (Drag to Course)</div>
+        <div id="unassigned-list" class="pills-wrap"></div>
+        <div style="margin-top:0.6rem;font-size:0.75rem;color:var(--ink2);opacity:0.8;">Click to select multiple, then drag to a course below.</div>
+    </div>
     <div id="course-class-area">
       <div class="list-empty">Add courses and teachers above to begin assigning classes.</div>
     </div>
@@ -339,10 +344,12 @@ tbody tr:hover td{background:var(--surface2);}
 // STATE
 // ═══════════════════════════════════════════
 let state = {
-  teachers: [],   // [{id, name}]
-  courses:  [],   // [{id, name, markersNeeded, classes:[{id, name, assignments:[{teacherId, periods}]}]}]
-  allocs:   {},   // {courseId: {writerId, markerIds:[]}}
+  teachers: [],
+  courses:  [],
+  allocs:   {},
+  unassignedClasses: [] // [{id, name, assignments:[{teacherId, periods}]}]
 };
+let selectedClassIds = new Set();
 let _id = 1;
 function uid(){ return 'id' + (_id++); }
 
@@ -443,6 +450,7 @@ function addCourse(){
   renderCourses(); renderCourseClassArea(); renderAllocTable();
 }
 function removeCourse(id){
+  // Could potentially move classes back to unassigned, but for now just delete
   state.courses=state.courses.filter(c=>c.id!==id);
   delete state.allocs[id];
   renderCourses(); renderCourseClassArea(); renderAllocTable();
@@ -472,12 +480,14 @@ function renderCourses(){
 // ═══════════════════════════════════════════
 function renderCourseClassArea(){
   const el=document.getElementById('course-class-area');
-  if(!state.courses.length||!state.teachers.length){
+  renderUnassignedArea();
+  
+  if(!state.courses.length){
     el.innerHTML='<div class="list-empty">Add courses and teachers above to begin assigning classes.</div>';return;
   }
   el.innerHTML=state.courses.map(c=>`
-    <div style="margin-bottom:1.4rem;padding-bottom:1.4rem;border-bottom:1px solid var(--rule);">
-      <div style="display:flex;align-items:center;gap:.8rem;margin-bottom:.7rem;flex-wrap:wrap;">
+    <div class="course-drop-zone" style="margin-bottom:1.4rem;padding:0.8rem;border-bottom:1px solid var(--rule);" ondragover="allowDrop(event)" ondrop="dropClasses(event, '${c.id}')" ondragleave="dragLeave(event)">
+      <div style="display:flex;align-items:center;gap:.8rem;margin-bottom:.7rem;flex-wrap:wrap;pointer-events:none;">
         <strong style="font-family:var(--font-head);font-size:1.05rem;">${esc(c.name)}</strong>
         <div class="marker-count" title="Markers needed for this course">
           <span style="font-size:.68rem;color:var(--dim);letter-spacing:.08em;text-transform:uppercase;">Markers:</span>
@@ -492,6 +502,73 @@ function renderCourseClassArea(){
         <button class="btn btn-secondary btn-sm" onclick="addClass('${c.id}')">+ Add Class</button>
       </div>
     </div>`).join('');
+}
+
+function renderUnassignedArea() {
+    const wrap = document.getElementById('unassigned-wrapper');
+    const list = document.getElementById('unassigned-list');
+    if (state.unassignedClasses.length === 0) {
+        wrap.classList.remove('visible');
+        return;
+    }
+    wrap.classList.add('visible');
+    list.innerHTML = state.unassignedClasses.map(cl => {
+        const isSel = selectedClassIds.has(cl.id);
+        const teachers = cl.assignments.map(a => {
+            const t = state.teachers.find(te => te.id === a.teacherId);
+            if (!t) return '';
+            // Initials
+            return t.name.split(' ').map(n=>n[0]).join('');
+        }).filter(Boolean).join(', ');
+        
+        return `<div class="class-chip ${isSel ? 'selected' : ''}" 
+                     draggable="true" 
+                     ondragstart="dragStart(event, '${cl.id}')"
+                     onclick="toggleSelectClass('${cl.id}')">
+                  ${esc(cl.name)}
+                  ${teachers ? `<span class="teacher-badge">${teachers}</span>` : ''}
+                </div>`;
+    }).join('');
+}
+
+function toggleSelectClass(id) {
+    if (selectedClassIds.has(id)) selectedClassIds.delete(id);
+    else selectedClassIds.add(id);
+    renderUnassignedArea();
+}
+
+function dragStart(e, id) {
+    if (!selectedClassIds.has(id)) {
+        // If dragging an unselected item, treat it as the only selection
+        selectedClassIds.clear();
+        selectedClassIds.add(id);
+        renderUnassignedArea(); // Visual update
+    }
+    e.dataTransfer.setData('text/plain', JSON.stringify(Array.from(selectedClassIds)));
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function allowDrop(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+function dragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+
+function dropClasses(e, courseId) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    const ids = JSON.parse(e.dataTransfer.getData('text/plain'));
+    const course = state.courses.find(c => c.id === courseId);
+    if (!course) return;
+
+    // Move classes
+    ids.forEach(id => {
+        const idx = state.unassignedClasses.findIndex(cl => cl.id === id);
+        if (idx !== -1) {
+            const cls = state.unassignedClasses.splice(idx, 1)[0];
+            course.classes.push(cls);
+        }
+    });
+    selectedClassIds.clear();
+    renderCourseClassArea();
+    renderAllocTable();
 }
 
 function renderClassesForCourse(course) {
@@ -909,7 +986,7 @@ function processImportedData(text) {
     const fcEl = document.getElementById('faculty-code');
     const facultyCode = fcEl ? fcEl.value.trim().toUpperCase() : '';
     const data = parseCSV(text);
-    state = { teachers: [], courses: [], allocs: {} };
+    state = { teachers: [], courses: [], allocs: {}, unassignedClasses: [] };
     _id = 1;
     const teacherMap = {}, courseMap = {};
 
@@ -932,9 +1009,6 @@ function processImportedData(text) {
         if (!codePart.toUpperCase().startsWith(facultyCode)) return;
       }
       
-      // If no course name, fallback to using the class name.
-      if (!courseName && className) courseName = className;
-
       // Teacher Name
       let teacherName = getVal(['teacher_name', 'teacher']);
       if (!teacherName) {
@@ -955,21 +1029,36 @@ function processImportedData(text) {
         teacherId = teacherMap[teacherName];
       }
 
+      // Get or create course
+      let course = null;
       if (courseName) {
         if (!courseMap[courseName]) {
           const courseId = uid();
           courseMap[courseName] = courseId;
-          const markers = parseInt(getVal(['markers_needed', 'markers']) || 2, 10);
-          state.courses.push({ id: courseId, name: courseName, markersNeeded: markers, allTeachersMark: false, classes: [] });
+          course = { id: courseId, name: courseName, markersNeeded: parseInt(getVal(['markers_needed', 'markers']) || 2, 10), allTeachersMark: false, classes: [] };
+          state.courses.push(course);
         }
+        course = state.courses.find(c => c.name === courseName);
       }
-      const course = state.courses.find(c => c.name === courseName);
 
+      // Get or create class and assign teacher
       if (className && course) {
+        // Add to Course
         let cls = course.classes.find(cl => cl.name === className);
         if (!cls) {
           cls = { id: uid(), name: className, assignments: [] };
           course.classes.push(cls);
+        }
+        if (teacherId && !cls.assignments.some(a => a.teacherId === teacherId)) {
+          const periods = parseInt(getVal(['periods', 'load']) || 5, 10);
+          cls.assignments.push({ teacherId, periods });
+        }
+      } else if (className && !courseName) {
+        // Add to Unassigned
+        let cls = state.unassignedClasses.find(cl => cl.name === className);
+        if (!cls) {
+          cls = { id: uid(), name: className, assignments: [] };
+          state.unassignedClasses.push(cls);
         }
         if (teacherId && !cls.assignments.some(a => a.teacherId === teacherId)) {
           const periods = parseInt(getVal(['periods', 'load']) || 5, 10);
