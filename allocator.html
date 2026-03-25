@@ -610,7 +610,7 @@ function renderClassesForCourse(course) {
           <option value="">— Assign Teacher —</option>
           ${state.teachers.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('')}
         </select>
-        <input type="number" id="assign-periods-${cl.id}" value="5" min="1" max="20" placeholder="Periods" style="flex:1;">
+        <input type="number" id="assign-periods-${cl.id}" value="7" min="1" max="20" placeholder="Periods" style="flex:1;">
         <button class="btn btn-secondary btn-sm" onclick="addTeacherToClass('${course.id}','${cl.id}')">+ Assign</button>
       </div>
     </div>
@@ -1076,7 +1076,7 @@ function processImportedData(text) {
         }
         
         if (teacherId && !cls.assignments.some(a => a.teacherId === teacherId)) {
-          const periods = parseInt(getVal(['periods', 'load']) || 5, 10);
+          const periods = parseInt(getVal(['periods', 'load']) || 7, 10);
           cls.assignments.push({ teacherId, periods });
         }
       }
