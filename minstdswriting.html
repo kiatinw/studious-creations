@@ -11,6 +11,7 @@
   --green-l:#E1F5EE;--green-d:#0F6E56;
   --purple-l:#EEEDFE;--purple-d:#534AB7;
   --muted-bg:#f5f5f3;
+  --red:#d93025;
   --text:#1a1a1a;--muted:#666;--border:#e0e0e0;
   --bg:#f5f5f3;--surface:#fff;--radius:10px;
 }
@@ -68,6 +69,10 @@ input[type=range]{flex:1;height:4px;accent-color:var(--blue);cursor:pointer;min-
 .slider-val{font-size:12px;font-weight:700;color:var(--blue);min-width:20px;text-align:center}
 .out{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word}
 .out-note{font-size:12px;color:var(--muted);margin-top:1rem;line-height:1.6}
+.timer-wrap{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-weight:600;font-variant-numeric:tabular-nums}
+.timer-label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.timer-val{font-size:18px;color:var(--blue)}
+.timer-val.urgent{color:var(--red)}
 </style>
 </head>
 <body>
@@ -93,7 +98,7 @@ input[type=range]{flex:1;height:4px;accent-color:var(--blue);cursor:pointer;min-
   <div class="brow">
     <button class="btn" onclick="go('s1')">← Back</button>
     <button class="btn btns" onclick="doNewPrompt()">↺ Different prompt</button>
-    <button class="btn btnp" onclick="go('s3')">Start writing →</button>
+    <button class="btn btnp" onclick="startWriting()">Start writing →</button>
   </div>
 </div>
 
@@ -101,6 +106,10 @@ input[type=range]{flex:1;height:4px;accent-color:var(--blue);cursor:pointer;min-
   <h1>Write your response</h1>
   <p class="sub">Aim for approximately 500 words. Spellcheck is off — write as you would in the real test.</p>
   <div class="prog"><div class="pd done"></div><div class="pd done"></div><div class="pd active"></div><div class="pd"></div><span class="plbl">Step 3 of 4</span></div>
+  <div class="timer-wrap" id="timer-wrap">
+    <span class="timer-label">Time remaining</span>
+    <span class="timer-val" id="timer">45:00</span>
+  </div>
   <div id="wpbox" class="pbox"></div>
   <textarea id="resp" spellcheck="false" autocorrect="off" autocomplete="off" autocapitalize="off" placeholder="Write your response here…" oninput="doWC()"></textarea>
   <div class="wc"><span id="wcn">0</span> words</div>
@@ -159,6 +168,35 @@ var allPrompts=[
 ];
 
 var currentPrompt=null;
+var timerInterval=null;
+var timeRemaining=45*60;
+
+function startWriting(){
+  go('s3');
+  if(timerInterval) clearInterval(timerInterval);
+  timeRemaining=45*60;
+  updateTimerDisplay();
+  timerInterval=setInterval(function(){
+    timeRemaining--;
+    updateTimerDisplay();
+    if(timeRemaining===5*60){
+      alert('Time check: 5 minutes remaining!');
+    }
+    if(timeRemaining<=0){
+      clearInterval(timerInterval);
+      alert('Time is up! Please finish your writing.');
+    }
+  },1000);
+}
+
+function updateTimerDisplay(){
+  var m=Math.floor(timeRemaining/60);
+  var s=timeRemaining%60;
+  var el=document.getElementById('timer');
+  el.textContent=m+':'+(s<10?'0':'')+s;
+  if(timeRemaining<=5*60) el.classList.add('urgent');
+  else el.classList.remove('urgent');
+}
 
 function getRandom(excludeId){
   var pool=allPrompts.filter(function(p){return p.id!==excludeId});
@@ -198,12 +236,14 @@ function go(id){
 
 function doWC(){
   var v=document.getElementById('resp').value.trim();
+  localStorage.setItem('minstd_draft', v);
   document.getElementById('wcn').textContent=v?v.split(/\s+/).length:0;
 }
 
 function doReflect(){
   var v=document.getElementById('resp').value.trim();
   if(v.length<30){alert('Please write your response before continuing.');return;}
+  if(timerInterval) clearInterval(timerInterval);
   document.getElementById('writing-display').textContent=v;
   buildCriteria();
   go('s4');
@@ -386,11 +426,25 @@ function fallback(text,cb){
 }
 
 function doReset(){
+  if(!confirm('Are you sure you want to reset? This will clear your current writing and cannot be undone.')) return;
+  if(timerInterval) clearInterval(timerInterval);
   document.getElementById('resp').value='';
+  localStorage.removeItem('minstd_draft');
   document.getElementById('wcn').textContent='0';
   currentPrompt=null;
   go('s1');
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+  var saved = localStorage.getItem('minstd_draft');
+  if (saved) {
+    var textarea = document.getElementById('resp');
+    if (textarea) {
+      textarea.value = saved;
+      doWC();
+    }
+  }
+});
 </script>
 </body>
 </html>
