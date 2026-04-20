@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mathematics Report Writer</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fff;--bg2:#f7f7f5;--bg3:#f0efeb;
+  --text:#1a1a18;--text2:#5a5a57;--text3:#9a9a96;
+  --border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.22);
+  --green-bg:#EAF3DE;--green-text:#27500A;
+  --blue-bg:#E6F1FB;--blue-text:#0C447C;
+  --amber-bg:#FAEEDA;--amber-text:#633806;
+  --red-bg:#FCEBEB;--red-text:#791F1F;
+  --r:8px;--rl:12px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1c1c1a;--bg2:#242422;--bg3:#2c2c2a;
+  --text:#e8e8e4;--text2:#a0a09c;--text3:#606060;
+  --border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2);
+  --green-bg:#173404;--green-text:#C0DD97;
+  --blue-bg:#042C53;--blue-text:#B5D4F4;
+  --amber-bg:#412402;--amber-text:#FAC775;
+  --red-bg:#501313;--red-text:#F09595;
+}}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--text);min-height:100vh}
+.app{max-width:900px;margin:0 auto;padding:2rem 1rem 4rem}
+h1{font-size:20px;font-weight:500;margin-bottom:4px}
+.sub{font-size:13px;color:var(--text2);margin-bottom:1.5rem}
+.panel{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--rl);padding:1.25rem;margin-bottom:1rem}
+.panel-title{font-size:15px;font-weight:500;margin-bottom:1rem}
+label{display:block;font-size:13px;color:var(--text2);margin-bottom:5px}
+input,select,textarea{width:100%;padding:8px 10px;border:0.5px solid var(--border2);border-radius:var(--r);font-size:14px;background:var(--bg);color:var(--text);font-family:inherit;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--text2);box-shadow:0 0 0 2px rgba(128,128,128,0.12)}
+textarea{resize:vertical}
+button{padding:8px 16px;border:0.5px solid var(--border2);border-radius:var(--r);font-size:14px;cursor:pointer;background:var(--bg);color:var(--text);font-family:inherit}
+button:hover{background:var(--bg2)}
+button:active{transform:scale(0.98)}
+.btn-p{background:var(--text);color:var(--bg);border-color:var(--text)}
+.btn-p:hover{opacity:0.85;background:var(--text)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>*{flex:1;min-width:130px}
+.gap{margin-top:10px}
+.hint{font-size:12px;color:var(--text3);margin-top:4px}
+.divider{border:none;border-top:0.5px solid var(--border);margin:1rem 0}
+.step{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:8px}
+.scard{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--rl);padding:1rem 1.25rem;margin-bottom:10px}
+.scard-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.snum{font-size:12px;color:var(--text3);background:var(--bg2);padding:2px 8px;border-radius:20px}
+.name-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.name-chip{padding:4px 12px;border-radius:20px;font-size:13px;cursor:pointer;border:0.5px solid var(--border2);background:var(--bg2);color:var(--text2)}
+.name-chip.selected{background:var(--text);color:var(--bg);border-color:var(--text)}
+.name-chip:hover:not(.selected){background:var(--bg3)}
+.grade-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.gpill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:500}
+.gpill button{background:none;border:none;cursor:pointer;font-size:13px;line-height:1;padding:0;color:inherit;opacity:.6}
+.gpill button:hover{opacity:1}
+.ga{background:var(--green-bg);color:var(--green-text)}
+.gb{background:var(--blue-bg);color:var(--blue-text)}
+.gc{background:var(--amber-bg);color:var(--amber-text)}
+.gd{background:var(--red-bg);color:var(--red-text)}
+.report-block{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--rl);padding:1.25rem;margin-bottom:1rem}
+.report-name{font-size:15px;font-weight:500;margin-bottom:4px}
+.report-meta{font-size:12px;color:var(--text2);margin-bottom:12px;display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.sentence-row{display:grid;grid-template-columns:18px 1fr;gap:8px;align-items:center;margin-bottom:8px}
+.sn{font-size:12px;color:var(--text3);font-weight:500}
+.sentence-row select{font-size:13px;padding:6px 8px}
+.final-report{background:var(--bg2);border-radius:var(--r);padding:12px 14px;font-size:14px;line-height:1.8;margin:10px 0;color:var(--text);border-left:3px solid var(--border2)}
+.report-actions{display:flex;gap:8px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Mathematics report writer</h1>
+  <p class="sub">Build 4-sentence report comments from a comment bank. Runs entirely in your browser — no data sent anywhere.</p>
+
+  <div class="panel">
+    <div class="step">Setup</div>
+    <div style="max-width:380px">
+      <label>Subject / course name</label>
+      <input type="text" id="subject" value="Mathematics" placeholder="e.g. Year 10 Mathematics Advanced">
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Students</div>
+    <label>Paste names — any format (one per line or comma-separated)</label>
+    <textarea id="bulk" rows="5" placeholder="Last name first:&#10;Smith, Benjamin&#10;O'Brien, Sarah&#10;&#10;Or first name first:&#10;Wei Zhang&#10;Aisha Mohammed"></textarea>
+    <div class="gap" style="display:flex;gap:8px">
+      <button class="btn-p" onclick="parseNames()">Add students</button>
+      <button onclick="clearAll()">Clear all</button>
+    </div>
+    <hr class="divider">
+    <div id="slist"></div>
+    <div id="scount" style="font-size:13px;color:var(--text2);padding-top:2px"></div>
+  </div>
+
+  <div class="panel">
+    <div class="step">Build reports</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-p" onclick="buildAll()" style="padding:10px 22px;font-size:15px">Build all reports</button>
+      <button onclick="copyAllReports()">Copy all to clipboard</button>
+    </div>
+    <p style="font-size:12px;color:var(--text3);margin-top:8px">After building, swap sentence variants using the dropdowns on each report.</p>
+  </div>
+
+  <div id="reports"></div>
+</div>
+
+<script>
+var students = [];
+
+var TOPICS = [
+  "Algebra","Trigonometry","Statistics and Probability","Financial Mathematics",
+  "Calculus","Measurement","Geometry","Functions and Relations","Data Analysis",
+  "Number and Algebra","Logarithms","Sequences and Series","Coordinate Geometry",
+  "Rates of Change","Polynomials","Circle Geometry","Matrices","Simultaneous Equations",
+  "Quadratic Equations","Surface Area and Volume","Probability","Indices and Surds"
+];
+
+// COMMENT BANK
+// 4 bands: 0=outstanding(A/85+)  1=high(B/70+)  2=solid(C/55+)  3=developing(below 55)
+// Each band has 4 variants per sentence
+// Tokens: {NAME} {SUBJ} {TOPIC} {their} {them} {themselves} {They}
+
+var BANK = {
+  s1: [
+    // ── band 0: outstanding ──
+    [
+      "{NAME} is a highly motivated and dedicated student who consistently approaches {SUBJ} with enthusiasm, intellectual curiosity, and a genuine love of mathematical challenge.",
+      "{NAME} is an exceptionally focused and self-directed learner who demonstrates an outstanding commitment to {SUBJ} and actively seeks to deepen {their} mathematical understanding beyond set tasks.",
+      "{NAME} brings remarkable persistence and rigour to {SUBJ}, consistently approaching new concepts with confidence and a desire to understand the underlying mathematical principles.",
+      "{NAME} is a standout student in {SUBJ} who consistently demonstrates initiative, strong work ethic, and a capacity to engage critically with complex mathematical ideas."
+    ],
+    // ── band 1: high ──
+    [
+      "{NAME} is a diligent and engaged student who participates actively in {SUBJ} and consistently applies {themselves} to all set tasks with care and purpose.",
+      "{NAME} demonstrates a positive and determined attitude towards {SUBJ}, showing a clear willingness to extend {their} mathematical skills and take on challenging problems.",
+      "{NAME} is a reliable and hardworking student who approaches {SUBJ} with a strong sense of responsibility and consistently produces work of a high standard.",
+      "{NAME} engages with {SUBJ} in a thoughtful and focused manner, demonstrating a commendable level of effort and a genuine desire to improve {their} mathematical performance."
+    ],
+    // ── band 2: solid ──
+    [
+      "{NAME} is a conscientious learner who engages constructively in {SUBJ} and makes a genuine effort to develop {their} understanding of mathematical concepts.",
+      "{NAME} participates in {SUBJ} with a satisfactory level of engagement and is working to build greater consistency in {their} approach to mathematical tasks.",
+      "{NAME} demonstrates a willingness to engage with {SUBJ} and is developing the study habits and persistence required to strengthen {their} overall performance.",
+      "{NAME} approaches {SUBJ} with a reasonable level of effort and is encouraged to build on this foundation by engaging more deeply with the mathematical concepts covered in class."
+    ],
+    // ── band 3: developing ──
+    [
+      "{NAME} is continuing to develop {their} engagement with {SUBJ} and is encouraged to build {their} confidence and commitment to mathematical study.",
+      "{NAME} is working towards developing the study habits and persistence needed to progress in {SUBJ} and is encouraged to engage more consistently with course material.",
+      "{NAME} would benefit from approaching {SUBJ} with greater regularity and focus, as consistent engagement is the most important step towards improving {their} mathematical outcomes.",
+      "{NAME} is at an early stage of developing {their} mathematical confidence and is encouraged to seek support and engage actively with all available learning opportunities in {SUBJ}."
+    ]
+  ],
+
+  s2: [
+    // ── band 0: outstanding ──
+    [
+      "{NAME} has demonstrated an outstanding capacity to apply complex mathematical reasoning across a range of problems in {TOPIC}, consistently producing accurate, well-structured, and insightful solutions.",
+      "{NAME} has demonstrated the ability to interpret, analyse, and solve challenging problems in {TOPIC} with precision, confidence, and a high level of mathematical fluency.",
+      "{NAME} has demonstrated exceptional skill in {TOPIC}, showing the ability to make connections between mathematical concepts and apply {their} knowledge to unfamiliar and complex problem types.",
+      "{NAME} has demonstrated a sophisticated understanding of {TOPIC}, producing work that reflects clear mathematical thinking, precise notation, and a strong command of course content."
+    ],
+    // ── band 1: high ──
+    [
+      "{NAME} has demonstrated a strong ability to apply learned techniques in {TOPIC} effectively, producing work of a consistently high standard with sound reasoning.",
+      "{NAME} has demonstrated sound mathematical understanding in {TOPIC}, showing the ability to work through multi-step problems with accuracy and clarity.",
+      "{NAME} has demonstrated a well-developed understanding of key concepts in {TOPIC}, applying appropriate strategies with confidence and producing reliable, well-presented solutions.",
+      "{NAME} has demonstrated the capacity to engage with the demands of {TOPIC} at a high level, consistently showing careful working and strong conceptual understanding."
+    ],
+    // ── band 2: solid ──
+    [
+      "{NAME} is developing {their} ability to apply mathematical concepts in {TOPIC} and shows growing competence in working through structured problems.",
+      "{NAME} is developing {their} understanding of key skills in {TOPIC} and is making progress towards more consistent and accurate application of mathematical techniques.",
+      "{NAME} is able to demonstrate a satisfactory understanding of foundational concepts in {TOPIC} and is working towards applying these skills with greater independence and accuracy.",
+      "{NAME} is developing {their} problem-solving skills in {TOPIC} and, with continued practice, is progressing towards a more reliable and confident application of course content."
+    ],
+    // ── band 3: developing ──
+    [
+      "{NAME} is developing {their} foundational understanding of {TOPIC} and requires additional practice to consolidate core skills and build greater accuracy.",
+      "{NAME} is working towards demonstrating competency in {TOPIC} and would benefit from further consolidation of the key concepts and procedures covered in this area.",
+      "{NAME} is at an early stage of developing {their} skills in {TOPIC} and is encouraged to focus on building a strong conceptual foundation before progressing to more complex problem types.",
+      "{NAME} is developing {their} ability to apply mathematical procedures in {TOPIC} and requires targeted support and regular practice to strengthen {their} understanding of core course content."
+    ]
+  ],
+
+  s3: [
+    // ── band 0: outstanding ──
+    [
+      "To further extend {their} high level of achievement, {NAME} is encouraged to explore higher-order problem types and refine {their} ability to communicate mathematical reasoning with precision and depth.",
+      "{NAME} would benefit from challenging {themselves} with unfamiliar and complex problem types in {TOPIC} to continue building {their} mathematical repertoire and preparing for the demands of senior assessment.",
+      "In order to reach the highest level of performance, {NAME} is encouraged to focus on the clarity and rigour of {their} written mathematical communication, ensuring solutions are fully justified.",
+      "{NAME} would benefit from seeking out extension opportunities in {TOPIC} to further consolidate {their} outstanding skills and develop the ability to adapt known strategies to novel situations."
+    ],
+    // ── band 1: high ──
+    [
+      "{NAME} would benefit from focusing on the accuracy of {their} working-out and mathematical notation in {TOPIC} to further elevate the quality and consistency of {their} solutions.",
+      "{NAME} is encouraged to seek feedback on areas of uncertainty in {TOPIC} and to develop strategies for identifying and self-correcting errors before submitting work.",
+      "{NAME} is encouraged to push beyond familiar problem types in {TOPIC} and to develop greater flexibility in selecting and applying mathematical strategies.",
+      "{NAME} would benefit from consolidating {their} understanding of the more complex aspects of {TOPIC}, as this will allow {them} to perform more consistently across all question types in assessments."
+    ],
+    // ── band 2: solid ──
+    [
+      "{NAME} would benefit from dedicating additional time to consolidating {their} understanding of {TOPIC} in order to achieve more consistent results across all assessment tasks.",
+      "{NAME} is advised to focus on strengthening {their} problem-solving processes in {TOPIC}, as clear and complete working-out will improve both the accuracy and the quality of {their} responses.",
+      "{NAME} is encouraged to review and revisit challenging concepts in {TOPIC} regularly, as consistent revision is key to building the confidence needed to perform under assessment conditions.",
+      "{NAME} would benefit from practising a wider variety of question types in {TOPIC} to develop greater flexibility and reduce errors when approaching unfamiliar problem structures."
+    ],
+    // ── band 3: developing ──
+    [
+      "{NAME} would benefit from revisiting foundational concepts in {TOPIC} in order to build the confidence and accuracy required to progress to more complex applications.",
+      "{NAME} is advised to prioritise regular revision of key formulas, definitions, and procedures in {TOPIC} to reduce errors and build a stronger conceptual foundation.",
+      "{NAME} would benefit from breaking down complex problems in {TOPIC} into smaller steps and checking each stage of {their} working carefully, as this will help to reduce errors and build confidence.",
+      "{NAME} is encouraged to identify and address specific gaps in {their} understanding of {TOPIC} as a priority, as this will provide the foundation needed to engage meaningfully with more advanced content."
+    ]
+  ],
+
+  s4: [
+    // ── band 0: outstanding ──
+    [
+      "{NAME} would benefit from regularly practising timed examination questions in {TOPIC} to further sharpen {their} ability to communicate reasoning clearly and efficiently under assessment conditions.",
+      "{NAME} is advised to engage with extension and enrichment problems in {TOPIC} to work towards mastery and to continue building on {their} already exceptional level of performance.",
+      "{NAME} would benefit from reviewing {their} solutions critically after assessments, identifying any areas where reasoning could be expressed more concisely or with greater mathematical precision.",
+      "{NAME} is encouraged to explore mathematical concepts beyond the syllabus in {TOPIC} to deepen {their} understanding and to develop the higher-order thinking skills that will serve {them} well in future study."
+    ],
+    // ── band 1: high ──
+    [
+      "{NAME} is advised to integrate past examination questions into {their} study routine to refine {their} mathematical reasoning and maximise {their} performance across all assessment tasks.",
+      "{NAME} would benefit from reviewing worked examples in {TOPIC} and identifying the most appropriate strategy for each problem type, in order to strengthen {their} overall accuracy and confidence.",
+      "{NAME} is encouraged to form or join study groups focused on {TOPIC} to consolidate {their} understanding, expose {themselves} to different problem-solving approaches, and further strengthen {their} performance.",
+      "{NAME} would benefit from keeping a dedicated error journal for {SUBJ}, recording mistakes made in practice tasks in {TOPIC} and reviewing these regularly to avoid repeating the same errors in assessments."
+    ],
+    // ── band 2: solid ──
+    [
+      "{NAME} would benefit from completing additional practice exercises in {TOPIC} and seeking teacher feedback to work towards a more consistent and confident level of achievement.",
+      "{NAME} is advised to develop a structured and regular study routine that includes focused practice in {TOPIC} in order to consolidate {their} skills and work towards meeting all course outcomes.",
+      "{NAME} would benefit from using available textbook resources and online practice tools to revisit key concepts in {TOPIC} and build the fluency needed to perform confidently in assessments.",
+      "{NAME} is encouraged to seek clarification from {their} teacher when concepts in {TOPIC} are unclear, as addressing misunderstandings early will support more consistent progress across the remainder of the course."
+    ],
+    // ── band 3: developing ──
+    [
+      "{NAME} would benefit from attending additional support sessions and completing structured revision tasks in {TOPIC} to work towards achieving the core outcomes of the course.",
+      "{NAME} is advised to seek clarification on foundational concepts in {TOPIC} and to make use of all available resources and support in order to work towards meeting expected course standards.",
+      "{NAME} would benefit from setting specific and achievable study goals for {TOPIC} each week, focusing on one key concept at a time, in order to build confidence and make steady, measurable progress.",
+      "{NAME} is strongly encouraged to make use of teacher consultation time, complete all set homework tasks in {SUBJ}, and engage with revision resources in {TOPIC} to work towards the foundational outcomes of the course."
+    ]
+  ]
+};
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function gradeClass(g){
+  var u=g.toUpperCase().trim(),n=parseFloat(g);
+  if(u[0]==='A'||(!isNaN(n)&&n>=85))return 'ga';
+  if(u[0]==='B'||(!isNaN(n)&&n>=70))return 'gb';
+  if(u[0]==='C'||(!isNaN(n)&&n>=55))return 'gc';
+  return 'gd';
+}
+
+function bandIndex(grades){
+  if(!grades.length)return 2;
+  var vals=grades.map(function(g){
+    var u=g.toUpperCase().trim(),n=parseFloat(g);
+    if(u[0]==='A'||(!isNaN(n)&&n>=85))return 0;
+    if(u[0]==='B'||(!isNaN(n)&&n>=70))return 1;
+    if(u[0]==='C'||(!isNaN(n)&&n>=55))return 2;
+    return 3;
+  });
+  return Math.min(3,Math.round(vals.reduce(function(a,b){return a+b},0)/vals.length));
+}
+
+// Split a raw name entry into individual word tokens
+// Handles "Smith, Benjamin" and "Benjamin Smith" and "Wei Zhang"
+function tokeniseName(raw){
+  // Remove trailing/leading whitespace, collapse internal spaces
+  var cleaned = raw.trim().replace(/\s+/g,' ');
+  // Check if comma-separated (Last, First format)
+  if(cleaned.indexOf(',') !== -1){
+    var parts = cleaned.split(',').map(function(p){return p.trim()}).filter(Boolean);
+    // Return all individual words across all parts, last-name parts first
+    var words = [];
+    parts.forEach(function(p){ p.split(' ').forEach(function(w){if(w)words.push(w);}); });
+    return { words: words, hasComma: true, lastNameFirst: true };
+  }
+  var words = cleaned.split(' ').filter(Boolean);
+  return { words: words, hasComma: false, lastNameFirst: false };
+}
+
+function parseNames(){
+  var raw=document.getElementById('bulk').value.trim();
+  if(!raw)return;
+  var lines = raw.split(/\n/).map(function(s){return s.trim()}).filter(Boolean);
+  // Also handle comma-separated on same line only when no comma-as-separator ambiguity
+  var entries = [];
+  lines.forEach(function(line){
+    // If the line contains a comma AND looks like "Last, First" (one comma, words on each side)
+    var commaCount = (line.match(/,/g)||[]).length;
+    if(commaCount === 1){
+      entries.push(line);
+    } else if(commaCount > 1){
+      // Multiple commas = multiple names separated by commas
+      line.split(',').forEach(function(n){if(n.trim())entries.push(n.trim());});
+    } else {
+      entries.push(line);
+    }
+  });
+
+  entries.forEach(function(entry){
+    entry = entry.trim();
+    if(!entry)return;
+    if(students.find(function(s){return s.raw.toLowerCase()===entry.toLowerCase()}))return;
+    var parsed = tokeniseName(entry);
+    var words = parsed.words;
+    // Default selected name: if last-name-first, guess first non-surname word, else first word
+    var defaultIdx = parsed.lastNameFirst ? (words.length > 1 ? 1 : 0) : 0;
+    students.push({
+      id:'s'+Date.now()+'_'+Math.random().toString(36).slice(2),
+      raw: entry,
+      words: words,
+      selectedWordIdx: defaultIdx,
+      customName: '',
+      pronoun:'he',
+      grades:[],
+      topic:TOPICS[0]
+    });
+  });
+  document.getElementById('bulk').value='';
+  renderStudents();
+}
+
+function clearAll(){if(confirm('Remove all students?')){students=[];renderStudents();document.getElementById('reports').innerHTML='';}}
+function removeStudent(id){students=students.filter(function(s){return s.id!==id});renderStudents();}
+function addGrade(id){
+  var inp=document.getElementById('gi-'+id);
+  var val=inp.value.trim();if(!val)return;
+  var s=students.find(function(s){return s.id===id});
+  if(s){s.grades.push(val);inp.value='';renderStudents();}
+}
+function removeGrade(id,i){
+  var s=students.find(function(s){return s.id===id});
+  if(s){s.grades.splice(i,1);renderStudents();}
+}
+function updateField(id,field,val){
+  var s=students.find(function(s){return s.id===id});
+  if(s)s[field]=val;
+}
+function selectWord(id,idx){
+  var s=students.find(function(s){return s.id===id});
+  if(!s)return;
+  s.selectedWordIdx=idx;
+  s.customName='';
+  // Update chips UI
+  var chips=document.querySelectorAll('.chip-'+id);
+  chips.forEach(function(c,i){c.classList.toggle('selected',i===idx);});
+  // Clear custom input
+  var ci=document.getElementById('cname-'+id);
+  if(ci)ci.value='';
+}
+function getReportName(s){
+  if(s.customName&&s.customName.trim())return s.customName.trim();
+  return s.words[s.selectedWordIdx]||s.words[0]||s.raw;
+}
+
+function renderStudents(){
+  document.getElementById('scount').textContent=students.length?students.length+' student'+(students.length!==1?'s':'')+' added.':'';
+  document.getElementById('slist').innerHTML=students.map(function(s,i){
+    var chips=s.words.map(function(w,j){
+      return '<span class="name-chip chip-'+s.id+(j===s.selectedWordIdx?' selected':'')+'" onclick="selectWord(\''+s.id+'\','+j+')">'+esc(w)+'</span>';
+    }).join('');
+    return '<div class="scard">'+
+      '<div class="scard-head"><span class="snum">Student '+(i+1)+'</span>'+
+      '<button class="btn-sm" style="color:var(--red-text)" onclick="removeStudent(\''+s.id+'\')">Remove</button></div>'+
+      '<div class="row">'+
+        '<div>'+
+          '<label>Full name (as entered)</label>'+
+          '<input type="text" value="'+esc(s.raw)+'" readonly style="background:var(--bg2);color:var(--text2)">'+
+          '<div style="margin-top:6px"><span style="font-size:12px;color:var(--text3)">Click to select the name to use in reports:</span>'+
+          '<div class="name-chips">'+chips+'</div></div>'+
+        '</div>'+
+        '<div style="flex:0.55;min-width:150px">'+
+          '<label>Or type a custom report name</label>'+
+          '<input type="text" id="cname-'+s.id+'" value="'+esc(s.customName)+'" placeholder="e.g. Wei" onchange="updateField(\''+s.id+'\',\'customName\',this.value)" oninput="updateField(\''+s.id+'\',\'customName\',this.value)">'+
+          '<div class="hint">Overrides chip selection. Do not shorten (e.g. Benjamin, not Ben).</div>'+
+        '</div>'+
+        '<div style="flex:0.4;min-width:120px">'+
+          '<label>Pronoun</label>'+
+          '<select onchange="updateField(\''+s.id+'\',\'pronoun\',this.value)">'+
+          '<option value="he"'+(s.pronoun==='he'?' selected':'')+'>He / him</option>'+
+          '<option value="she"'+(s.pronoun==='she'?' selected':'')+'>She / her</option>'+
+          '<option value="they"'+(s.pronoun==='they'?' selected':'')+'>They / them</option>'+
+          '</select>'+
+        '</div>'+
+      '</div>'+
+      '<div class="gap"><label>Topic focus</label>'+
+      '<select onchange="updateField(\''+s.id+'\',\'topic\',this.value)">'+
+      TOPICS.map(function(t){return '<option value="'+t+'"'+(s.topic===t?' selected':'')+'>'+t+'</option>'}).join('')+
+      '</select></div>'+
+      '<div class="gap"><label>Grades</label>'+
+      '<div class="row" style="flex-wrap:nowrap">'+
+      '<input type="text" id="gi-'+s.id+'" placeholder="A, B+, 82%, etc." onkeydown="if(event.key===\'Enter\')addGrade(\''+s.id+'\')">'+
+      '<button onclick="addGrade(\''+s.id+'\')" style="flex:0;white-space:nowrap">Add</button></div>'+
+      '<div class="grade-pills">'+
+      s.grades.map(function(g,j){return '<span class="gpill '+gradeClass(g)+'">'+esc(g)+'<button onclick="removeGrade(\''+s.id+'\','+j+')">x</button></span>'}).join('')+
+      '</div></div>'+
+    '</div>';
+  }).join('');
+}
+
+function fillTemplate(tpl,s,subj){
+  var p=s.pronoun||'he';
+  var They=p==='he'?'He':p==='she'?'She':'They';
+  var their=p==='he'?'his':p==='she'?'her':'their';
+  var them=p==='he'?'him':p==='she'?'her':'them';
+  var themselves=p==='he'?'himself':p==='she'?'herself':'themselves';
+  var name=getReportName(s);
+  return tpl
+    .replace(/{NAME}/g,name)
+    .replace(/{SUBJ}/g,subj)
+    .replace(/{TOPIC}/g,s.topic||'Algebra')
+    .replace(/{They}/g,They)
+    .replace(/{their}/g,their)
+    .replace(/{them}/g,them)
+    .replace(/{themselves}/g,themselves);
+}
+
+function getReport(s){
+  var subj=document.getElementById('subject').value.trim()||'Mathematics';
+  var band=bandIndex(s.grades);
+  var v1=parseInt((document.getElementById('v1-'+s.id)||{value:'0'}).value)||0;
+  var v2=parseInt((document.getElementById('v2-'+s.id)||{value:'0'}).value)||0;
+  var v3=parseInt((document.getElementById('v3-'+s.id)||{value:'0'}).value)||0;
+  var v4=parseInt((document.getElementById('v4-'+s.id)||{value:'0'}).value)||0;
+  var b1=BANK.s1[band],b2=BANK.s2[band],b3=BANK.s3[band],b4=BANK.s4[band];
+  return [
+    fillTemplate(b1[Math.min(v1,b1.length-1)],s,subj),
+    fillTemplate(b2[Math.min(v2,b2.length-1)],s,subj),
+    fillTemplate(b3[Math.min(v3,b3.length-1)],s,subj),
+    fillTemplate(b4[Math.min(v4,b4.length-1)],s,subj)
+  ].join(' ');
+}
+
+function refreshReport(id){
+  var s=students.find(function(s){return s.id===id});
+  if(!s)return;
+  var el=document.getElementById('fr-'+id);
+  if(el)el.textContent=getReport(s);
+}
+
+var BAND_LABEL=['Outstanding','High','Solid','Developing'];
+var BAND_CLS=['ga','gb','gc','gd'];
+
+function buildAll(){
+  if(!students.length){alert('No students added yet.');return;}
+  document.getElementById('reports').innerHTML=students.map(function(s){
+    var band=bandIndex(s.grades);
+    var b1=BANK.s1[band],b2=BANK.s2[band],b3=BANK.s3[band],b4=BANK.s4[band];
+    function opts(arr){
+      return arr.map(function(t,i){
+        var preview=t.replace(/{[A-Za-z]+}/g,'...').substring(0,60);
+        return '<option value="'+i+'">Option '+(i+1)+': '+esc(preview)+'...</option>';
+      }).join('');
+    }
+    var name=getReportName(s);
+    return '<div class="report-block" id="rb-'+s.id+'">'+
+      '<div class="report-name">'+esc(name)+'<span style="font-weight:400;color:var(--text2);font-size:13px;margin-left:8px">'+esc(s.raw)+'</span></div>'+
+      '<div class="report-meta">'+
+        s.grades.map(function(g){return '<span class="gpill '+gradeClass(g)+'">'+esc(g)+'</span>'}).join('')+
+        '<span class="gpill '+BAND_CLS[band]+'">'+BAND_LABEL[band]+'</span>'+
+        '<span style="color:var(--text3)">'+esc(s.topic)+'</span>'+
+      '</div>'+
+      '<div class="sentence-row"><span class="sn">1.</span><select id="v1-'+s.id+'" onchange="refreshReport(\''+s.id+'\')">'+opts(b1)+'</select></div>'+
+      '<div class="sentence-row"><span class="sn">2.</span><select id="v2-'+s.id+'" onchange="refreshReport(\''+s.id+'\')">'+opts(b2)+'</select></div>'+
+      '<div class="sentence-row"><span class="sn">3.</span><select id="v3-'+s.id+'" onchange="refreshReport(\''+s.id+'\')">'+opts(b3)+'</select></div>'+
+      '<div class="sentence-row"><span class="sn">4.</span><select id="v4-'+s.id+'" onchange="refreshReport(\''+s.id+'\')">'+opts(b4)+'</select></div>'+
+      '<div class="final-report" id="fr-'+s.id+'"></div>'+
+      '<div class="report-actions">'+
+        '<button class="btn-sm btn-p" onclick="copyReport(\''+s.id+'\')">Copy report</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  students.forEach(function(s){refreshReport(s.id);});
+}
+
+function copyReport(id){
+  var el=document.getElementById('fr-'+id);
+  if(!el)return;
+  navigator.clipboard.writeText(el.textContent).then(function(){
+    var btn=document.querySelector('#rb-'+id+' .btn-p');
+    if(btn){btn.textContent='Copied!';setTimeout(function(){btn.textContent='Copy report'},1500);}
+  });
+}
+
+function copyAllReports(){
+  var all=students.map(function(s){
+    var el=document.getElementById('fr-'+s.id);
+    return el&&el.textContent?getReportName(s)+':\n'+el.textContent:'';
+  }).filter(Boolean).join('\n\n');
+  if(!all){alert('Click "Build all reports" first.');return;}
+  navigator.clipboard.writeText(all).then(function(){
+    var btn=event.target;
+    btn.textContent='Copied!';
+    setTimeout(function(){btn.textContent='Copy all to clipboard'},1500);
+  });
+}
+</script>
+</body>
+</html>
