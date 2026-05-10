@@ -1,0 +1,1039 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Nunito:wght@400;600;700;800&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body { font-family: 'Nunito', sans-serif; }
+
+  .er-app {
+    background: #0a0e1a;
+    color: #e0e8ff;
+    min-height: 600px;
+    padding: 0;
+    font-family: 'Nunito', sans-serif;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stars {
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 50% 70%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 10% 90%, rgba(255,255,255,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 60%, rgba(255,255,255,0.3) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .er-content { position: relative; z-index: 1; padding: 16px; }
+
+  .mission-header {
+    text-align: center;
+    padding: 20px 16px 12px;
+    border-bottom: 1px solid rgba(100,160,255,0.2);
+    margin-bottom: 16px;
+  }
+
+  .mission-tag {
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: #4af;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .mission-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 22px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.2;
+    text-shadow: 0 0 20px rgba(100,160,255,0.6);
+    margin-bottom: 4px;
+  }
+
+  .mission-sub {
+    font-size: 12px;
+    color: #7090c0;
+    letter-spacing: 1px;
+  }
+
+  .progress-bar-wrap {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(100,160,255,0.2);
+    border-radius: 20px;
+    height: 10px;
+    margin: 10px 0 4px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4af, #a0f);
+    border-radius: 20px;
+    transition: width 0.8s cubic-bezier(.4,0,.2,1);
+  }
+
+  .progress-label {
+    font-size: 11px;
+    color: #4af;
+    font-family: 'Share Tech Mono', monospace;
+    text-align: right;
+  }
+
+  .stage-nav {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+
+  .stage-btn {
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    padding: 5px 9px;
+    border-radius: 4px;
+    border: 1px solid rgba(100,160,255,0.3);
+    background: rgba(10,20,40,0.8);
+    color: #7090c0;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .stage-btn.active {
+    background: rgba(40,100,200,0.3);
+    border-color: #4af;
+    color: #4af;
+  }
+
+  .stage-btn.completed {
+    background: rgba(0,180,100,0.15);
+    border-color: #0b6;
+    color: #0b6;
+  }
+
+  .stage-btn.locked {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .stage-panel {
+    background: rgba(15,25,50,0.9);
+    border: 1px solid rgba(100,160,255,0.2);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .stage-header {
+    background: rgba(20,50,100,0.6);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(100,160,255,0.15);
+  }
+
+  .stage-icon {
+    font-size: 24px;
+    width: 36px;
+    text-align: center;
+  }
+
+  .stage-title-block h2 {
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .stage-title-block p {
+    font-size: 11px;
+    color: #7090c0;
+    margin-top: 2px;
+  }
+
+  .time-badge {
+    margin-left: auto;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    background: rgba(100,160,255,0.1);
+    border: 1px solid rgba(100,160,255,0.2);
+    color: #4af;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .stage-body { padding: 14px 16px; }
+
+  .briefing-box {
+    background: rgba(0,200,255,0.05);
+    border-left: 3px solid #4af;
+    border-radius: 0 6px 6px 0;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #c0d8f0;
+    margin-bottom: 14px;
+  }
+
+  .question-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(100,160,255,0.15);
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+
+  .q-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: #4af;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+
+  .q-difficulty {
+    display: inline-block;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  .diff-core { background: rgba(0,150,255,0.15); color: #4af; border: 1px solid rgba(0,150,255,0.3); }
+  .diff-support { background: rgba(0,200,100,0.12); color: #0c9; border: 1px solid rgba(0,200,100,0.25); }
+  .diff-challenge { background: rgba(200,100,255,0.12); color: #c6f; border: 1px solid rgba(200,100,255,0.25); }
+
+  .q-text {
+    font-size: 13px;
+    line-height: 1.65;
+    color: #d0e0ff;
+    margin-bottom: 10px;
+  }
+
+  .fraction-display {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 4px;
+    vertical-align: middle;
+    line-height: 1;
+  }
+
+  .fraction-display span:first-child {
+    border-bottom: 2px solid #4af;
+    padding-bottom: 2px;
+    min-width: 18px;
+    text-align: center;
+  }
+
+  .fraction-display span:last-child {
+    padding-top: 2px;
+    min-width: 18px;
+    text-align: center;
+  }
+
+  .answer-input-wrap {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .answer-input {
+    background: rgba(10,20,60,0.8);
+    border: 1px solid rgba(100,160,255,0.3);
+    border-radius: 4px;
+    color: #fff;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    padding: 6px 10px;
+    width: 120px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .answer-input:focus { border-color: #4af; }
+  .answer-input.correct { border-color: #0c9; background: rgba(0,200,100,0.08); }
+  .answer-input.wrong { border-color: #f44; background: rgba(255,50,50,0.08); animation: shake 0.3s; }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+
+  .check-btn {
+    background: rgba(40,100,200,0.3);
+    border: 1px solid rgba(100,160,255,0.4);
+    color: #4af;
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+
+  .check-btn:hover { background: rgba(40,100,200,0.5); }
+
+  .hint-btn {
+    background: transparent;
+    border: 1px solid rgba(200,150,0,0.3);
+    color: #ca0;
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Share Tech Mono', monospace;
+    transition: all 0.2s;
+  }
+
+  .hint-btn:hover { background: rgba(200,150,0,0.1); }
+
+  .hint-text {
+    font-size: 12px;
+    color: #ca0;
+    background: rgba(200,150,0,0.06);
+    border: 1px solid rgba(200,150,0,0.2);
+    border-radius: 4px;
+    padding: 8px 10px;
+    margin-top: 8px;
+    display: none;
+  }
+
+  .hint-text.visible { display: block; }
+
+  .feedback {
+    font-size: 12px;
+    margin-top: 6px;
+    font-family: 'Share Tech Mono', monospace;
+    display: none;
+  }
+
+  .feedback.correct { color: #0c9; display: block; }
+  .feedback.wrong { color: #f66; display: block; }
+
+  .code-reveal {
+    background: rgba(0,0,0,0.4);
+    border: 2px solid rgba(100,200,100,0.3);
+    border-radius: 8px;
+    padding: 14px 16px;
+    text-align: center;
+    margin-top: 12px;
+    display: none;
+  }
+
+  .code-reveal.visible { display: block; }
+
+  .code-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    color: #0b6;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+
+  .code-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 28px;
+    font-weight: 900;
+    color: #0f0;
+    letter-spacing: 8px;
+    text-shadow: 0 0 15px rgba(0,255,0,0.4);
+    animation: glow 2s infinite alternate;
+  }
+
+  @keyframes glow {
+    from { text-shadow: 0 0 10px rgba(0,255,0,0.3); }
+    to { text-shadow: 0 0 25px rgba(0,255,0,0.7); }
+  }
+
+  .code-clue {
+    font-size: 11px;
+    color: #7090c0;
+    margin-top: 6px;
+  }
+
+  .stage-complete-banner {
+    background: rgba(0,180,100,0.1);
+    border: 1px solid rgba(0,180,100,0.3);
+    border-radius: 6px;
+    padding: 10px 14px;
+    text-align: center;
+    color: #0c9;
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin-top: 10px;
+    display: none;
+  }
+
+  .stage-complete-banner.visible { display: block; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid rgba(100,160,255,0.1);
+    margin: 12px 0;
+  }
+
+  .section-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #4060a0;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .final-boss {
+    border-color: rgba(200,100,255,0.4) !important;
+  }
+
+  .final-boss .stage-header {
+    background: rgba(80,20,120,0.5) !important;
+  }
+
+  .victory-screen {
+    text-align: center;
+    padding: 30px 20px;
+    display: none;
+  }
+
+  .victory-screen.visible { display: block; }
+
+  .victory-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 20px;
+    font-weight: 900;
+    color: #ff0;
+    text-shadow: 0 0 20px rgba(255,200,0,0.5);
+    margin-bottom: 12px;
+  }
+
+  .victory-code {
+    font-family: 'Orbitron', monospace;
+    font-size: 32px;
+    color: #0f0;
+    letter-spacing: 10px;
+    margin: 16px 0;
+    animation: glow 1.5s infinite alternate;
+  }
+
+  .score-display {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    color: #7090c0;
+    margin-top: 10px;
+  }
+
+  .mission-briefing-full {
+    background: rgba(0,10,30,0.9);
+    border: 1px solid rgba(100,160,255,0.2);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+
+  .briefing-para {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #b0c8e8;
+    margin-bottom: 8px;
+  }
+
+  .highlight { color: #4af; font-weight: 700; }
+  .danger { color: #f66; font-weight: 700; }
+  .success { color: #0c9; }
+
+  .mission-start-btn {
+    display: block;
+    width: 100%;
+    background: linear-gradient(135deg, rgba(40,100,200,0.4), rgba(100,40,200,0.4));
+    border: 2px solid rgba(100,160,255,0.4);
+    color: #fff;
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 14px;
+    transition: all 0.3s;
+  }
+
+  .mission-start-btn:hover {
+    background: linear-gradient(135deg, rgba(40,100,200,0.6), rgba(100,40,200,0.6));
+    border-color: #4af;
+    transform: translateY(-1px);
+  }
+
+  .q-number {
+    font-weight: 800;
+    color: #fff;
+  }
+
+  .mixed-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+  }
+
+  input[type=text], input[type=number] {
+    background: rgba(10,20,60,0.8);
+    border: 1px solid rgba(100,160,255,0.3);
+    border-radius: 4px;
+    color: #fff;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    padding: 6px 10px;
+    outline: none;
+  }
+
+  input[type=text]:focus, input[type=number]:focus { border-color: #4af; }
+</style>
+
+<div class="er-app">
+  <div class="stars"></div>
+  <div class="er-content">
+
+    <div class="mission-header">
+      <div class="mission-tag">⚡ CLASSIFIED — LEVEL 7 CLEARANCE REQUIRED</div>
+      <div class="mission-title">OPERATION: FRACTION BREAK</div>
+      <div class="mission-sub">A MATHEMATICAL ESCAPE MISSION · YEAR 7</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-fill" style="width: 0%"></div>
+      </div>
+      <div class="progress-label" id="progress-label">0 / 7 STAGES CLEARED</div>
+    </div>
+
+    <div id="intro-screen">
+      <div class="mission-briefing-full">
+        <div class="section-label">📡 INCOMING TRANSMISSION — PRIORITY ALPHA</div>
+        <p class="briefing-para">
+          Agent. The galaxy's most advanced space station — <span class="highlight">NEXUS-7</span> — has been infiltrated by the <span class="danger">Void Collective</span>, a group of rogue AI robots who have locked every critical system behind <span class="highlight">fraction-based security vaults</span>.
+        </p>
+        <p class="briefing-para">
+          You have <span class="danger">35 minutes</span> before the station's reactor overloads. You must crack through <span class="highlight">7 security stages</span>, each protected by fraction puzzles of increasing complexity. Each stage you clear will reveal a digit of the <span class="highlight">MASTER OVERRIDE CODE</span>.
+        </p>
+        <p class="briefing-para">
+          Work carefully. Work fast. The fate of NEXUS-7 — and everyone aboard — rests on your mathematical skills.
+        </p>
+        <p class="briefing-para success">
+          ✔ Show all working in your mission log (exercise book)<br>
+          ✔ Answers may be fractions, whole numbers, or mixed numbers<br>
+          ✔ Ask your handler (teacher) for emergency support if stuck
+        </p>
+      </div>
+      <button class="mission-start-btn" onclick="startMission()">⚡ INITIATE MISSION — BEGIN STAGE 1</button>
+    </div>
+
+    <div id="mission-screen" style="display:none">
+      <div class="stage-nav" id="stage-nav"></div>
+      <div id="stage-container"></div>
+      <div class="victory-screen" id="victory-screen">
+        <div class="mission-tag">🎉 MISSION COMPLETE — NEXUS-7 SAVED</div>
+        <div class="victory-title">OVERRIDE CODE ASSEMBLED</div>
+        <div class="victory-code" id="final-code">_ _ _ _ _ _ _</div>
+        <div class="briefing-para" style="margin-top:12px">Incredible work, Agent. All seven vaults have been cracked. Enter the complete code above into the Master Override Terminal to save NEXUS-7!</div>
+        <div class="score-display" id="score-display"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const STAGES = [
+  {
+    id: 0,
+    icon: "🔐",
+    title: "VAULT ALPHA — SIMPLIFY",
+    subtitle: "Simplifying Fractions",
+    time: "3–4 MIN",
+    briefing: "VAULT ALPHA's lock uses simplified fraction codes. To crack it, reduce each fraction to its simplest form. The lock reads only lowest-term fractions.",
+    code: "7",
+    clue: "First digit of the Override Code: 7",
+    questions: [
+      {
+        label: "Q1", diff: "support",
+        text: "The station's power grid is split into 12 equal sections. 8 sections are still working. Write this as a fraction, then simplify it fully.",
+        answer: "2/3",
+        hint: "Find the HCF of 8 and 12. Both divide by 4.",
+        accept: ["2/3"]
+      },
+      {
+        label: "Q2", diff: "core",
+        text: "A cargo hold contains 30 crates. 18 crates carry food supplies. Simplify the fraction of crates carrying food.",
+        answer: "3/5",
+        hint: "HCF of 18 and 30 is 6.",
+        accept: ["3/5"]
+      },
+      {
+        label: "Q3", diff: "core",
+        text: "An access corridor is 45 metres long. A robot has travelled 27 metres. What simplified fraction of the corridor has it covered?",
+        answer: "3/5",
+        hint: "27 ÷ 9 = 3, 45 ÷ 9 = 5",
+        accept: ["3/5"]
+      },
+      {
+        label: "Q4 ★", diff: "challenge",
+        text: "A security door has 360 rivets. 252 are made of titanium. Simplify the fraction of titanium rivets. What is the HCF of 252 and 360?",
+        answer: "7/10",
+        hint: "HCF of 252 and 360 is 36. Try dividing both by 4, then by 9.",
+        accept: ["7/10"]
+      }
+    ],
+    codeCheck: (answers) => answers.filter(a => a).length >= 3
+  },
+  {
+    id: 1,
+    icon: "⚗️",
+    title: "VAULT BETA — EQUIVALENTS",
+    subtitle: "Equivalent Fractions",
+    time: "3–4 MIN",
+    briefing: "VAULT BETA requires matching equivalent fraction pairs to calibrate the plasma shields. Find the missing values to restore balance.",
+    code: "3",
+    clue: "Second digit of the Override Code: 3",
+    questions: [
+      {
+        label: "Q1", diff: "support",
+        text: "The fuel gauge shows 2/5 full. A technician needs this as a fraction with denominator 20. What is the equivalent fraction?",
+        answer: "8/20",
+        hint: "Multiply top and bottom of 2/5 by 4.",
+        accept: ["8/20", "8 /20"]
+      },
+      {
+        label: "Q2", diff: "core",
+        text: "Two shield panels must have the same fraction of energy. Panel A has 5/8 charge. Panel B has ?/24 charge. Find the missing numerator.",
+        answer: "15",
+        hint: "8 × 3 = 24, so multiply 5 by 3.",
+        accept: ["15", "15/24"]
+      },
+      {
+        label: "Q3", diff: "core",
+        text: "Are these two coolant fractions equivalent? 4/6 and 14/21. Show how you know.",
+        answer: "yes",
+        hint: "Simplify both fractions to lowest terms.",
+        accept: ["yes", "Yes", "YES", "y"]
+      },
+      {
+        label: "Q4 ★", diff: "challenge",
+        text: "Three oxygen tanks show: 3/4, 9/12, and 21/28. Which is the odd one out? Type the fraction that does NOT belong.",
+        answer: "none",
+        hint: "Simplify each fraction fully. 3/4, 9/12 = 3/4, 21/28 = 3/4. What does this tell you?",
+        accept: ["none", "None", "NONE", "they are all equal", "all equal", "all the same"]
+      }
+    ],
+    codeCheck: (answers) => answers.filter(a => a).length >= 3
+  },
+  {
+    id: 2,
+    icon: "🍕",
+    title: "VAULT GAMMA — QUANTITIES",
+    subtitle: "Fractions of Amounts",
+    time: "4–5 MIN",
+    briefing: "VAULT GAMMA controls the food replicators. Calculate the exact quantities needed to keep the crew alive and the vault will open.",
+    code: "9",
+    clue: "Third digit of the Override Code: 9",
+    questions: [
+      {
+        label: "Q1", diff: "support",
+        text: "The crew needs 3/4 of the 240 emergency rations distributed now. How many rations is that?",
+        answer: "180",
+        hint: "Divide 240 by 4, then multiply by 3.",
+        accept: ["180"]
+      },
+      {
+        label: "Q2", diff: "core",
+        text: "A recipe for emergency protein bars uses 2/3 of a 750g bag of oats. How many grams of oats are needed?",
+        answer: "500",
+        hint: "750 ÷ 3 = 250, then × 2",
+        accept: ["500", "500g"]
+      },
+      {
+        label: "Q3", diff: "core",
+        text: "The water recycler holds 560 litres. 5/8 of this is clean drinking water. How many litres can the crew drink?",
+        answer: "350",
+        hint: "560 ÷ 8 = 70. Now multiply by 5.",
+        accept: ["350", "350 litres", "350L"]
+      },
+      {
+        label: "Q4", diff: "core",
+        text: "A space suit weighs 120 kg. The helmet is 1/6 of the total weight, the boots are 1/4, and the body suit is the rest. How many kg is the body suit?",
+        answer: "70",
+        hint: "Find 1/6 and 1/4 of 120 separately, add them, then subtract from 120.",
+        accept: ["70", "70kg", "70 kg"]
+      },
+      {
+        label: "Q5 ★", diff: "challenge",
+        text: "In a crew of 360 people: 5/9 are engineers, 1/6 are medics, 1/4 are pilots. The rest are science officers. How many science officers are there?",
+        answer: "10",
+        hint: "Find each group's count: engineers = 200, medics = 60, pilots = 90. Add them up and subtract from 360.",
+        accept: ["10"]
+      }
+    ],
+    codeCheck: (answers) => answers.filter(a => a).length >= 4
+  },
+  {
+    id: 3,
+    icon: "➕",
+    title: "VAULT DELTA — ADD & SUBTRACT",
+    subtitle: "Adding & Subtracting Fractions",
+    time: "5–6 MIN",
+    briefing: "VAULT DELTA's pressure gauges use fraction addition and subtraction. Calculate the combined and remaining pressures to stabilise the system.",
+    code: "4",
+    clue: "Fourth digit of the Override Code: 4",
+    questions: [
+      {
+        label: "Q1", diff: "support",
+        text: "Two fuel tanks read 3/8 full and 1/8 full. What is the total fuel as a fraction?",
+        answer: "1/2",
+        hint: "Add the numerators. Then simplify: 4/8 = ?",
+        accept: ["1/2", "4/8"]
+      },
+      {
+        label: "Q2", diff: "core",
+        text: "A pipe carried 7/10 of a litre of coolant. 2/5 of a litre leaked. How much coolant remains? Give your answer as a simplified fraction.",
+        answer: "3/10",
+        hint: "Change 2/5 to tenths first: 4/10. Then subtract.",
+        accept: ["3/10"]
+      },
+      {
+        label: "Q3", diff: "core",
+        text: "Three systems need power: navigation uses 1/3, life support uses 1/4, and engines use 1/6. What fraction of power is used in total?",
+        answer: "3/4",
+        hint: "Common denominator is 12. Convert all three fractions.",
+        accept: ["3/4", "9/12"]
+      },
+      {
+        label: "Q4", diff: "core",
+        text: "A robot ran 2½ km, rested, then ran another 1¾ km. How far did it run in total? Give your answer as a mixed number.",
+        answer: "4 1/4",
+        hint: "Add the whole numbers: 2 + 1 = 3. Add the fractions: 1/2 + 3/4 = 5/4 = 1 1/4. Combine.",
+        accept: ["4 1/4", "4¼", "4.25", "17/4"]
+      },
+      {
+        label: "Q5 ★", diff: "challenge",
+        text: "A space mission was 5/6 of the way complete. A system failure set them back 2/9 of the total journey. What fraction of the mission remains?",
+        answer: "4/9",
+        hint: "Common denominator of 6 and 9 is 18. Work out 5/6 – 2/9 first, then subtract from 1.",
+        accept: ["4/9"]
+      }
+    ],
+    codeCheck: (answers) => answers.filter(a => a).length >= 4
+  },
+  {
+    id: 4,
+    icon: "✖️",
+    title: "VAULT EPSILON — MULTIPLY",
+    subtitle: "Multiplying Fractions",
+    time: "4–5 MIN",
+    briefing: "VAULT EPSILON uses a multiplication matrix. Each fraction result unlocks one segment of the defence grid. Calculate carefully.",
+    code: "6",
+    clue: "Fifth digit of the Override Code: 6",
+    questions: [
+      {
+        label: "Q1", diff: "support",
+        text: "A solar panel converts 2/3 of all light it captures. In 3 hours, it captures 1/2 of its maximum energy. What fraction of maximum energy does it actually convert?",
+        answer: "1/3",
+        hint: "Multiply 2/3 × 1/2. Multiply tops, multiply bottoms.",
+        accept: ["1/3", "2/6"]
+      },
+      {
+        label: "Q2", diff: "core",
+        text: "A rocket uses 3/5 of its fuel on the journey to the station. If the full tank holds 4/7 of a megalitre, how much fuel is used?",
+        answer: "12/35",
+        hint: "Multiply 3/5 × 4/7",
+        accept: ["12/35"]
+      },
+      {
+        label: "Q3", diff: "core",
+        text: "The engineering team has completed 4/5 of a repair job. They estimate 3/8 of the remaining work can be done without tools. What fraction of the WHOLE job is this tool-free section?",
+        answer: "3/40",
+        hint: "Remaining = 1 – 4/5 = 1/5. Multiply 3/8 × 1/5.",
+        accept: ["3/40"]
+      },
+      {
+        label: "Q4 ★", diff: "challenge",
+        text: "A ship travels at 2⅓ times the speed of a cargo drone. The drone travels 4/7 of a light-second per second. How far does the ship travel per second? Give your answer as a fraction or mixed number.",
+        answer: "4/3",
+        hint: "Convert 2⅓ to an improper fraction: 7/3. Then multiply 7/3 × 4/7. Can you cancel before multiplying?",
+        accept: ["4/3", "1 1/3", "1⅓"]
+      }
+    ],
+    codeCheck: (answers) => answers.filter(a => a).length >= 3
+  },
+  {
+    id: 5,
+    icon: "➗",
+    title: "VAULT ZETA — DIVIDE",
+    subtitle: "Dividing Fractions",
+    time: "4–5 MIN",
+    briefing: "VAULT ZETA's AI locked all division circuits. You must reverse-calculate the fractions to restore each system. Remember: dividing by a fraction means multiplying by its reciprocal.",
+    code: "2",
+    clue: "Sixth digit of the Override Code: 2",
+    questions: [
+      {
+        label: "Q1", diff: "support",
+        text: "A food block weighing 3/4 kg needs to be split into equal pieces of 1/8 kg each. How many pieces will there be?",
+        answer: "6",
+        hint: "Divide 3/4 ÷ 1/8. Flip 1/8 to get 8/1, then multiply.",
+        accept: ["6"]
+      },
+      {
+        label: "Q2", diff: "core",
+        text: "A fuel cell contains 5/6 of a unit. Each engine burn uses 1/4 of a unit. How many complete burns can the cell power?",
+        answer: "3",
+        hint: "5/6 ÷ 1/4 = 5/6 × 4/1 = 20/6 = 3⅓. How many COMPLETE burns?",
+        accept: ["3"]
+      },
+      {
+        label: "Q3", diff: "core",
+        text: "3/5 of a light-year of cable needs to be cut into pieces of 3/10 of a light-year. How many pieces will there be?",
+        answer: "2",
+        hint: "3/5 ÷ 3/10 = 3/5 × 10/3. Cancel before multiplying.",
+        accept: ["2"]
+      },
+      {
+        label: "Q4 ★", diff: "challenge",
+        text: "A maintenance robot completes 2/9 of a task every hour. How many hours will the full task take? If there are 3 robots working simultaneously, how many hours would it take them together? Give both answers.",
+        answer: "4.5 hours / 1.5 hours",
+        hint: "1 ÷ 2/9 = 9/2 = 4.5 hours for 1 robot. Divide by 3 for 3 robots.",
+        accept: ["4.5 and 1.5", "4½ and 1½", "9/2 and 3/2", "4.5 hours / 1.5 hours", "4.5 1.5"]
+      }
+    ],
+    codeCheck: (answers) => answers.filter(a => a).length >= 3
+  },
+  {
+    id: 6,
+    icon: "💀",
+    title: "VAULT OMEGA — BOSS CHALLENGE",
+    subtitle: "Multi-Step Mission Problem",
+    time: "6–8 MIN",
+    briefing: "FINAL VAULT. The Void Collective's master lock requires solving a multi-part mission problem. Every step must be correct. Only the sharpest mathematical minds will succeed.",
+    code: "5",
+    clue: "Final digit of the Override Code: 5",
+    final: true,
+    questions: [
+      {
+        label: "MISSION REPORT", diff: "core",
+        text: "READ THE FULL MISSION REPORT CAREFULLY, THEN ANSWER ALL PARTS.\n\nNEXUS-7 has a crew of 840 people. The station operates on a 24-hour cycle:\n• 5/8 of the crew work the day shift\n• 1/3 of the crew work the night shift\n• The rest are on standby\n\nPART A: How many crew members work the day shift?\nPART B: How many work the night shift?\nPART C: What fraction are on standby? How many people is that?",
+        answer: "A=525, B=280, C=1/24=35",
+        hint: "Day: 840 × 5/8. Night: 840 × 1/3. Standby fraction: 1 – 5/8 – 1/3 (use common denominator 24).",
+        accept: ["525 280 35", "a=525 b=280 c=35", "525, 280, 35"]
+      },
+      {
+        label: "PART 2", diff: "core",
+        text: "During the emergency, the day shift crew split into repair teams:\n• 2/3 of day-shift workers go to Engineering\n• 3/7 of those engineers work on the fraction vaults specifically\n\nHow many crew members are working directly on the fraction vaults?",
+        answer: "150",
+        hint: "Day shift = 525. Engineering = 2/3 × 525 = 350. Vault workers = 3/7 × 350 = 150.",
+        accept: ["150"]
+      },
+      {
+        label: "PART 3 ★", diff: "challenge",
+        text: "The station's emergency food supply is 1,260 kg. The mission is expected to last 3½ days. If the crew uses 2/5 of the food on day 1, 1/3 on day 2, and splits the rest equally over the remaining 1½ days — how many kg per day do they eat on those final days? Give your answer as a fraction or decimal.",
+        answer: "126",
+        hint: "Day 1: 2/5 × 1260 = 504. Day 2: 1/3 × 1260 = 420. Remaining: 1260 – 504 – 420 = 336. Split over 1.5 days = 336 ÷ 1.5 = 224... wait, re-check: ÷ by 1.5 = × 2/3. 336 × 2/3 = 224 per... hmm. Per day over 1½ days: 336/1.5 = 224 kg/day.",
+        accept: ["224", "224 kg", "224kg"]
+      }
+    ],
+    codeCheck: (answers) => answers.filter(a => a).length >= 2
+  }
+];
+
+let stageProgress = new Array(STAGES.length).fill(null).map(() => ({ completed: false, answers: [] }));
+let currentStage = 0;
+
+function startMission() {
+  document.getElementById('intro-screen').style.display = 'none';
+  document.getElementById('mission-screen').style.display = 'block';
+  buildStageNav();
+  renderStage(0);
+}
+
+function buildStageNav() {
+  const nav = document.getElementById('stage-nav');
+  nav.innerHTML = '';
+  STAGES.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'stage-btn' + (i === currentStage ? ' active' : '') + (stageProgress[i].completed ? ' completed' : '') + (i > currentStage && !stageProgress[i].completed && i !== 0 ? '' : '');
+    btn.textContent = (stageProgress[i].completed ? '✓ ' : '') + ['α','β','γ','δ','ε','ζ','Ω'][i];
+    btn.title = s.title;
+    btn.onclick = () => { currentStage = i; buildStageNav(); renderStage(i); };
+    nav.appendChild(btn);
+  });
+}
+
+function getDiffLabel(diff) {
+  if (diff === 'support') return '<span class="q-difficulty diff-support">SUPPORT</span>';
+  if (diff === 'challenge') return '<span class="q-difficulty diff-challenge">CHALLENGE ★</span>';
+  return '<span class="q-difficulty diff-core">CORE</span>';
+}
+
+function renderStage(idx) {
+  const stage = STAGES[idx];
+  const prog = stageProgress[idx];
+  const container = document.getElementById('stage-container');
+
+  let qHTML = '';
+  stage.questions.forEach((q, qi) => {
+    const savedVal = prog.answers[qi] || '';
+    const isCorrect = prog.answers[qi] !== undefined && checkAnswer(q, prog.answers[qi]);
+    qHTML += `
+      <div class="question-card" id="qcard-${idx}-${qi}">
+        <div class="q-label">${q.label} ${getDiffLabel(q.diff)}</div>
+        <div class="q-text">${q.text.replace(/\n/g,'<br>')}</div>
+        <div class="answer-input-wrap">
+          <input type="text" class="answer-input ${isCorrect ? 'correct' : ''}" 
+            id="ans-${idx}-${qi}" 
+            placeholder="Your answer..." 
+            value="${savedVal}"
+            onkeydown="if(event.key==='Enter') checkQ(${idx},${qi})"
+          />
+          <button class="check-btn" onclick="checkQ(${idx},${qi})">CHECK ▶</button>
+          <button class="hint-btn" onclick="toggleHint(${idx},${qi})">HINT</button>
+        </div>
+        <div class="hint-text" id="hint-${idx}-${qi}">${q.hint}</div>
+        <div class="feedback" id="fb-${idx}-${qi}">${isCorrect ? '✓ Correct! Well done, Agent.' : ''}</div>
+      </div>`;
+  });
+
+  const codesFound = stageProgress.filter(p => p.completed).map((p, i) => STAGES[i].code);
+  const allComplete = stageProgress.every(p => p.completed);
+
+  container.innerHTML = `
+    <div class="stage-panel ${stage.final ? 'final-boss' : ''}">
+      <div class="stage-header">
+        <div class="stage-icon">${stage.icon}</div>
+        <div class="stage-title-block">
+          <h2>${stage.title}</h2>
+          <p>${stage.subtitle}</p>
+        </div>
+        <div class="time-badge">⏱ ${stage.time}</div>
+      </div>
+      <div class="stage-body">
+        <div class="briefing-box">📡 ${stage.briefing}</div>
+        <div class="section-label">SECURITY CHALLENGES</div>
+        ${qHTML}
+        <button class="check-btn" style="width:100%; margin-top:8px; padding:10px; font-size:11px;" onclick="submitStage(${idx})">
+          ⚡ SUBMIT STAGE ${['α','β','γ','δ','ε','ζ','Ω'][idx]} — ATTEMPT VAULT CRACK
+        </button>
+        <div class="code-reveal" id="code-reveal-${idx}">
+          <div class="code-label">✅ VAULT ${['α','β','γ','δ','ε','ζ','Ω'][idx]} CRACKED — DIGIT RECOVERED</div>
+          <div class="code-value">${stage.code}</div>
+          <div class="code-clue">${stage.clue}</div>
+        </div>
+        <div class="stage-complete-banner" id="complete-${idx}">
+          ★ VAULT ${['α','β','γ','δ','ε','ζ','Ω'][idx]} CLEARED — ADVANCE TO NEXT STAGE ★
+        </div>
+      </div>
+    </div>`;
+
+  if (prog.completed) {
+    document.getElementById(`code-reveal-${idx}`).classList.add('visible');
+    document.getElementById(`complete-${idx}`).classList.add('visible');
+  }
+
+  updateProgress();
+}
+
+function checkAnswer(q, val) {
+  const v = val.trim().toLowerCase().replace(/\s+/g,' ');
+  return q.accept.some(a => v === a.toLowerCase().replace(/\s+/g,' ') || v === a.toLowerCase());
+}
+
+function checkQ(stageIdx, qi) {
+  const input = document.getElementById(`ans-${stageIdx}-${qi}`);
+  const fb = document.getElementById(`fb-${stageIdx}-${qi}`);
+  const q = STAGES[stageIdx].questions[qi];
+  const val = input.value;
+  stageProgress[stageIdx].answers[qi] = val;
+
+  if (checkAnswer(q, val)) {
+    input.className = 'answer-input correct';
+    fb.textContent = '✓ Correct! Well done, Agent.';
+    fb.className = 'feedback correct';
+  } else {
+    input.className = 'answer-input wrong';
+    fb.textContent = '✗ Not quite. Check your working and try again.';
+    fb.className = 'feedback wrong';
+    setTimeout(() => { input.className = 'answer-input'; }, 600);
+  }
+}
+
+function toggleHint(stageIdx, qi) {
+  const hint = document.getElementById(`hint-${stageIdx}-${qi}`);
+  hint.classList.toggle('visible');
+}
+
+function submitStage(idx) {
+  const stage = STAGES[idx];
+  const prog = stageProgress[idx];
+  const correctCount = stage.questions.filter((q, qi) => {
+    const val = document.getElementById(`ans-${idx}-${qi}`)?.value || '';
+    prog.answers[qi] = val;
+    return checkAnswer(q, val);
+  }).length;
+
+  const pass = stage.codeCheck(stage.questions.map((q, qi) => checkAnswer(q, prog.answers[qi])));
+
+  if (pass) {
+    prog.completed = true;
+    document.getElementById(`code-reveal-${idx}`).classList.add('visible');
+    document.getElementById(`complete-${idx}`).classList.add('visible');
+    updateProgress();
+    buildStageNav();
+
+    const allDone = stageProgress.every(p => p.completed);
+    if (allDone) {
+      setTimeout(showVictory, 800);
+    } else {
+      const next = STAGES.findIndex((s, i) => i > idx && !stageProgress[i].completed);
+      if (next !== -1) {
+        setTimeout(() => { currentStage = next; buildStageNav(); renderStage(next); }, 1500);
+      }
+    }
+  } else {
+    const needed = stage.codeCheck.toString().match(/\d+/)?.[0] || '3';
+    alert(`⚠️ VAULT NOT CRACKED — You need at least ${needed} correct answers to break this lock. Review your working and try again!`);
+  }
+}
+
+function updateProgress() {
+  const done = stageProgress.filter(p => p.completed).length;
+  const pct = (done / STAGES.length) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${done} / ${STAGES.length} STAGES CLEARED`;
+}
+
+function showVictory() {
+  document.getElementById('stage-container').style.display = 'none';
+  document.getElementById('stage-nav').style.display = 'none';
+  const code = STAGES.map(s => s.code).join(' ');
+  document.getElementById('final-code').textContent = code;
+  const correct = stageProgress.reduce((sum, p, i) =>
+    sum + STAGES[i].questions.filter((q, qi) => checkAnswer(q, p.answers[qi] || '')).length, 0);
+  const total = STAGES.reduce((sum, s) => sum + s.questions.length, 0);
+  document.getElementById('score-display').textContent = `${correct} / ${total} questions answered correctly`;
+  document.getElementById('victory-screen').classList.add('visible');
+}
+</script>
